@@ -1540,18 +1540,27 @@ h3 {
   padding: 0 10px;
 }
 
-.slot-editor-row > div {
+.slot-times-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 7px;
 }
 
+.slot-times-row input[type="time"] {
+  min-width: 0;
+}
+
+.slot-times-row .slot-delete-button {
+  grid-column: 1 / -1;
+}
+
 .slot-delete-button {
-  min-height: 40px;
-  padding: 0 10px;
+  min-height: 44px;
+  padding: 0 12px;
   background: rgba(255, 119, 112, 0.12);
   color: var(--danger);
-  font-size: 12px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .slot-delete-button:disabled {

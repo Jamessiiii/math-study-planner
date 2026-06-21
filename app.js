@@ -1051,10 +1051,10 @@ function renderProgramming() {
             (slot) => `
               <article class="slot-editor-row">
                 <input type="text" value="${escapeHtml(slot.label)}" aria-label="Nom du creneau" data-slot-label="${slot.id}">
-                <div>
+                <div class="slot-times-row">
                   <input type="time" value="${escapeHtml(slot.start)}" aria-label="Debut" data-slot-start="${slot.id}">
                   <input type="time" value="${escapeHtml(slot.end)}" aria-label="Fin" data-slot-end="${slot.id}">
-                  <button class="slot-delete-button" type="button" data-slot-delete="${slot.id}" ${state.planning.slots.length <= 1 ? "disabled" : ""}>Suppr.</button>
+                  <button class="slot-delete-button" type="button" data-slot-delete="${slot.id}" ${state.planning.slots.length <= 1 ? "disabled" : ""}>Supprimer</button>
                 </div>
               </article>
             `
