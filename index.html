@@ -18,86 +18,35 @@
       <header class="app-header">
         <div>
           <p class="eyebrow" id="weekEyebrow">Semaine A</p>
-          <h1 id="viewTitle">Aujourd'hui</h1>
+          <h1 id="viewTitle">Calendrier</h1>
         </div>
-        <button id="exportState" class="icon-text-button" type="button">Exporter</button>
       </header>
 
       <main class="app-main">
-        <section id="todayView" class="view active-view" aria-labelledby="viewTitle">
-          <div id="todayContent"></div>
-        </section>
-
-        <section id="planningView" class="view" aria-labelledby="viewTitle">
-          <div class="toolbar">
-            <div class="segmented" role="group" aria-label="Choisir la semaine">
-              <button class="segment active" type="button" data-week="A">Semaine A</button>
-              <button class="segment" type="button" data-week="B">Semaine B</button>
-            </div>
-            <select id="daySelect" aria-label="Jour detaille"></select>
+        <section id="calendarView" class="view active-view" aria-labelledby="viewTitle">
+          <div class="week-switch" role="group" aria-label="Choisir la semaine">
+            <button class="segment active" type="button" data-week="A">Semaine A</button>
+            <button class="segment" type="button" data-week="B">Semaine B</button>
           </div>
-          <div id="weekGrid" class="week-grid"></div>
-          <div id="dayDetail" class="day-detail"></div>
-        </section>
-
-        <section id="programView" class="view" aria-labelledby="viewTitle">
-          <div class="filters">
-            <input id="globalSearch" type="search" placeholder="Chercher une notion, un bloc, une ressource">
-            <select id="domainFilter" aria-label="Filtrer par domaine">
-              <option value="all">Tous les domaines</option>
-            </select>
-            <select id="statusFilter" aria-label="Filtrer par statut">
-              <option value="all">Tous les statuts</option>
-              <option value="todo">A faire</option>
-              <option value="active">En cours</option>
-              <option value="done">Termine</option>
-              <option value="review">A revoir</option>
-            </select>
-          </div>
-          <div id="programTree" class="program-tree"></div>
+          <div id="weekCalendar" class="week-calendar"></div>
+          <div id="courseDetail" class="course-detail"></div>
         </section>
 
         <section id="progressView" class="view" aria-labelledby="viewTitle">
           <div id="progressContent" class="progress-content"></div>
-          <section class="card local-data-card">
-            <div>
-              <h2>Donnees locales</h2>
-              <p>La progression reste sur cet appareil avec le stockage du navigateur.</p>
-            </div>
-            <button id="resetProgress" class="danger-button" type="button">Remettre a zero</button>
-          </section>
+          <button id="resetProgress" class="danger-button" type="button">Remettre a zero</button>
         </section>
       </main>
 
       <nav class="bottom-nav" aria-label="Navigation principale">
-        <button class="nav-button active" type="button" data-view="today">
-          <span>Jour</span>
-          <strong>Aujourd'hui</strong>
-        </button>
-        <button class="nav-button" type="button" data-view="planning">
-          <span>Semaine</span>
-          <strong>Planning</strong>
-        </button>
-        <button class="nav-button" type="button" data-view="program">
-          <span>Arbre</span>
-          <strong>Programme</strong>
+        <button class="nav-button active" type="button" data-view="calendar">
+          <strong>Calendrier</strong>
         </button>
         <button class="nav-button" type="button" data-view="progress">
-          <span>Suivi</span>
           <strong>Progres</strong>
         </button>
       </nav>
     </div>
-
-    <dialog id="exportDialog">
-      <form method="dialog">
-        <div class="dialog-header">
-          <h2>Export local</h2>
-          <button value="close" class="close-button" aria-label="Fermer">x</button>
-        </div>
-        <textarea id="exportText" readonly></textarea>
-      </form>
-    </dialog>
 
     <script src="data.js"></script>
     <script src="app.js"></script>

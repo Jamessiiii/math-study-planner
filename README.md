@@ -1,12 +1,14 @@
 # Math Study Planner
 
-Prototype local de planning mobile pour trois domaines independants :
+Prototype local de calendrier mobile pour trois domaines independants :
 
 - Maths Sup : L1 -> L2 -> L3
 - Proba : programme probabilites/statistiques
 - Informatique : programme informatique
 
-L'app suit un cycle Semaine A / Semaine B et choisit les prochaines notions dans le domaine prevu par le planning.
+L'app suit un cycle Semaine A / Semaine B et place les prochains cours directement dans le calendrier hebdomadaire.
+
+Principe de simplicite : seul le bloc courant d'un domaine est visible. Par exemple, dans Maths Sup, les blocs L1 suivants restent masques tant que le Bloc 0 n'est pas termine.
 
 ## Lancer
 

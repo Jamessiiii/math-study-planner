@@ -1,27 +1,22 @@
-const STORAGE_KEY = "math-study-planner-state-v2";
-const DAY_ORDER = ["mon", "tue", "wed", "thu", "fri"];
+const STORAGE_KEY = "math-study-planner-state-v3";
+const SETTINGS_KEY = `${STORAGE_KEY}:settings`;
 
 const state = {
-  view: "today",
+  view: "calendar",
   week: loadSettings().week || "A",
-  selectedDay: loadSettings().selectedDay || getDefaultDayId(),
-  query: "",
-  domainFilter: "all",
-  statusFilter: "all",
+  selectedSessionId: loadSettings().selectedSessionId || null,
   progress: loadProgress(),
 };
 
 const statusLabels = {
   todo: "A faire",
   active: "En cours",
-  done: "Termine",
+  done: "Fait",
   review: "A revoir",
 };
 
 const viewTitles = {
-  today: "Aujourd'hui",
-  planning: "Planning",
-  program: "Programme",
+  calendar: "Calendrier",
   progress: "Progres",
 };
 
@@ -36,7 +31,7 @@ function loadProgress() {
 
 function loadSettings() {
   try {
-    return JSON.parse(localStorage.getItem(`${STORAGE_KEY}:settings`) || "{}");
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
   } catch {
     return {};
   }
@@ -48,14 +43,9 @@ function saveProgress() {
 
 function saveSettings() {
   localStorage.setItem(
-    `${STORAGE_KEY}:settings`,
-    JSON.stringify({ week: state.week, selectedDay: state.selectedDay })
+    SETTINGS_KEY,
+    JSON.stringify({ week: state.week, selectedSessionId: state.selectedSessionId })
   );
-}
-
-function getDefaultDayId() {
-  const index = new Date().getDay() - 1;
-  return DAY_ORDER[index] || "mon";
 }
 
 function domains() {
@@ -78,8 +68,18 @@ function getWeek() {
   return window.WEEK_TEMPLATES[state.week] || window.WEEK_TEMPLATES.A;
 }
 
-function getDay(dayId = state.selectedDay) {
-  return getWeek().days.find((day) => day.id === dayId) || getWeek().days[0];
+function getStatus(topicId) {
+  return state.progress[topicId]?.status || "todo";
+}
+
+function setStatus(topicId, status) {
+  state.progress[topicId] = {
+    ...(state.progress[topicId] || {}),
+    status,
+    updatedAt: new Date().toISOString(),
+  };
+  saveProgress();
+  render();
 }
 
 function allTopics() {
@@ -98,9 +98,7 @@ function allTopics() {
             accent: domain.accent,
             programId: program.id,
             levelTitle: program.title,
-            phase: program.phase,
             blockTitle: block.title,
-            path: [domain.title, program.title, block.title, topic.title],
             programOrder,
             blockOrder,
             topicOrder,
@@ -112,43 +110,6 @@ function allTopics() {
   return rows;
 }
 
-function getStatus(topicId) {
-  return state.progress[topicId]?.status || "todo";
-}
-
-function setStatus(topicId, status) {
-  state.progress[topicId] = {
-    ...(state.progress[topicId] || {}),
-    status,
-    updatedAt: new Date().toISOString(),
-  };
-  saveProgress();
-  render();
-}
-
-function filteredTopics() {
-  const query = state.query.trim().toLowerCase();
-  return allTopics().filter((topic) => {
-    const status = getStatus(topic.id);
-    const haystack = [
-      topic.title,
-      topic.summary,
-      topic.domainTitle,
-      topic.levelTitle,
-      topic.blockTitle,
-      ...(topic.resources || []),
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return (
-      (state.domainFilter === "all" || topic.domainId === state.domainFilter) &&
-      (state.statusFilter === "all" || status === state.statusFilter) &&
-      (!query || haystack.includes(query))
-    );
-  });
-}
-
 function topicSort(a, b) {
   return (
     a.programOrder - b.programOrder ||
@@ -158,64 +119,77 @@ function topicSort(a, b) {
   );
 }
 
-function nextTopicsForDomain(domainId, count = 2) {
-  const topics = allTopics()
-    .filter((topic) => topic.domainId === domainId && getStatus(topic.id) !== "done")
+function topicsForProgramBlock(programId, blockTitle) {
+  return allTopics()
+    .filter((topic) => topic.programId === programId && topic.blockTitle === blockTitle)
     .sort(topicSort);
-  return topics.slice(0, count);
+}
+
+function isTopicDone(topic) {
+  return getStatus(topic.id) === "done";
+}
+
+function blockStats(topics) {
+  const total = topics.length;
+  const done = topics.filter(isTopicDone).length;
+  const active = topics.filter((topic) => getStatus(topic.id) === "active").length;
+  const review = topics.filter((topic) => getStatus(topic.id) === "review").length;
+  return {
+    total,
+    done,
+    active,
+    review,
+    pct: total ? Math.round((done / total) * 100) : 100,
+  };
+}
+
+function currentBlockForDomain(domainId) {
+  const domain = getDomain(domainId);
+  if (!domain) return null;
+
+  for (const programId of domain.programIds) {
+    const program = getProgram(programId);
+    if (!program) continue;
+
+    for (const block of program.blocks) {
+      const topics = topicsForProgramBlock(program.id, block.title);
+      if (!topics.length) continue;
+      if (!topics.every(isTopicDone)) {
+        return { domain, program, block, topics, stats: blockStats(topics) };
+      }
+    }
+  }
+
+  return { domain, complete: true, topics: [], stats: { total: 0, done: 0, pct: 100 } };
+}
+
+function nextTopicsForDomain(domainId, count = 2) {
+  const current = currentBlockForDomain(domainId);
+  if (!current || current.complete) return [];
+  return current.topics.filter((topic) => getStatus(topic.id) !== "done").slice(0, count);
 }
 
 function scheduleForWeek() {
   const counters = {};
   return getWeek().days.map((day) => {
+    const domain = getDomain(day.domainId);
+    const current = currentBlockForDomain(day.domainId);
+    const candidates = nextTopicsForDomain(day.domainId, 8);
     const sessions = window.SESSION_SLOTS.map((slot) => {
-      const domainTopics = nextTopicsForDomain(day.domainId, 8);
-      const offset = counters[day.domainId] || 0;
-      const topic = domainTopics[offset] || domainTopics[domainTopics.length - 1] || null;
-      counters[day.domainId] = offset + 1;
-      return { ...slot, topic };
+      const index = counters[day.domainId] || 0;
+      const topic = candidates[index] || candidates[candidates.length - 1] || null;
+      counters[day.domainId] = index + 1;
+      return {
+        ...slot,
+        id: `${state.week}-${day.id}-${slot.id}`,
+        topic,
+      };
     });
-    return { ...day, domain: getDomain(day.domainId), sessions };
+    return { ...day, domain, current, sessions };
   });
 }
 
-function completionStats(topics) {
-  const totalHours = topics.reduce((sum, topic) => sum + (topic.hours || 4), 0);
-  const doneHours = topics
-    .filter((topic) => getStatus(topic.id) === "done")
-    .reduce((sum, topic) => sum + (topic.hours || 4), 0);
-  const done = topics.filter((topic) => getStatus(topic.id) === "done").length;
-  const active = topics.filter((topic) => getStatus(topic.id) === "active").length;
-  const review = topics.filter((topic) => getStatus(topic.id) === "review").length;
-  return {
-    total: topics.length,
-    done,
-    active,
-    review,
-    todo: topics.length - done - active - review,
-    pct: totalHours ? Math.round((doneHours / totalHours) * 100) : 0,
-    remainingHours: Math.max(0, totalHours - doneHours),
-  };
-}
-
 function initControls() {
-  const domainFilter = document.getElementById("domainFilter");
-  for (const domain of domains()) {
-    const option = document.createElement("option");
-    option.value = domain.id;
-    option.textContent = domain.title;
-    domainFilter.appendChild(option);
-  }
-
-  const daySelect = document.getElementById("daySelect");
-  for (const day of getWeek().days) {
-    const option = document.createElement("option");
-    option.value = day.id;
-    option.textContent = day.longLabel;
-    daySelect.appendChild(option);
-  }
-  daySelect.value = state.selectedDay;
-
   document.querySelectorAll(".nav-button").forEach((button) => {
     button.addEventListener("click", () => {
       state.view = button.dataset.view;
@@ -226,30 +200,10 @@ function initControls() {
   document.querySelectorAll(".segment").forEach((button) => {
     button.addEventListener("click", () => {
       state.week = button.dataset.week;
+      state.selectedSessionId = null;
       saveSettings();
       render();
     });
-  });
-
-  daySelect.addEventListener("change", (event) => {
-    state.selectedDay = event.target.value;
-    saveSettings();
-    render();
-  });
-
-  document.getElementById("globalSearch").addEventListener("input", (event) => {
-    state.query = event.target.value;
-    renderProgram();
-  });
-
-  domainFilter.addEventListener("change", (event) => {
-    state.domainFilter = event.target.value;
-    renderProgram();
-  });
-
-  document.getElementById("statusFilter").addEventListener("change", (event) => {
-    state.statusFilter = event.target.value;
-    renderProgram();
   });
 
   document.getElementById("resetProgress").addEventListener("click", () => {
@@ -259,22 +213,11 @@ function initControls() {
       render();
     }
   });
-
-  document.getElementById("exportState").addEventListener("click", () => {
-    const payload = {
-      exportedAt: new Date().toISOString(),
-      week: state.week,
-      selectedDay: state.selectedDay,
-      progress: state.progress,
-    };
-    document.getElementById("exportText").value = JSON.stringify(payload, null, 2);
-    document.getElementById("exportDialog").showModal();
-  });
 }
 
 function render() {
   document.getElementById("viewTitle").textContent = viewTitles[state.view];
-  document.getElementById("weekEyebrow").textContent = `${getWeek().label} · ${getWeek().summary}`;
+  document.getElementById("weekEyebrow").textContent = `${getWeek().label} · planning`;
 
   document.querySelectorAll(".view").forEach((view) => view.classList.remove("active-view"));
   document.getElementById(`${state.view}View`).classList.add("active-view");
@@ -286,258 +229,146 @@ function render() {
     button.classList.toggle("active", button.dataset.week === state.week);
   });
 
-  const daySelect = document.getElementById("daySelect");
-  daySelect.value = state.selectedDay;
-
-  renderToday();
-  renderPlanning();
-  renderProgram();
+  renderCalendar();
   renderProgress();
 }
 
-function renderToday() {
-  const day = getDay();
-  const domain = getDomain(day.domainId);
-  const topics = nextTopicsForDomain(day.domainId, 2);
-  const container = document.getElementById("todayContent");
-  container.innerHTML = `
-    <section class="today-hero accent-${domain.accent}">
-      <div>
-        <span class="chip">${escapeHtml(getWeek().label)}</span>
-        <h2>${escapeHtml(day.longLabel)} · ${escapeHtml(domain.title)}</h2>
-        <p>${escapeHtml(domain.rule)}</p>
-      </div>
-      <div class="hero-progress">
-        <strong>${completionStats(allTopics().filter((topic) => topic.domainId === domain.id)).pct}%</strong>
-        <span>${escapeHtml(domain.title)}</span>
-      </div>
-    </section>
-    <div class="session-stack">
-      ${window.SESSION_SLOTS.map((slot, index) => renderSessionCard(slot, topics[index] || topics[0], domain)).join("")}
-    </div>
-    <section class="card">
-      <div class="card-header">
-        <h2>Domaines cette semaine</h2>
-      </div>
-      <div class="domain-strip">
-        ${domains().map((item) => renderDomainSummary(item)).join("")}
-      </div>
-    </section>
-  `;
-  attachStatusHandlers(container);
-}
-
-function renderSessionCard(slot, topic, domain) {
-  if (!topic) {
-    return `
-      <article class="session-card accent-${domain.accent}">
-        <div class="session-time">${slot.start}-${slot.end}</div>
-        <h3>Aucune notion restante</h3>
-        <p>${escapeHtml(domain.title)} est termine dans les donnees actuelles.</p>
-      </article>
-    `;
-  }
-  return `
-    <article class="session-card accent-${domain.accent}">
-      <div class="session-time">${slot.start}-${slot.end}</div>
-      <h3>${escapeHtml(topic.title)}</h3>
-      <p>${escapeHtml(compactPath(topic))}</p>
-      <div class="resource-line">${escapeHtml((topic.resources || [])[0] || "Ressource a definir")}</div>
-      ${renderStatusActions(topic)}
-    </article>
-  `;
-}
-
-function renderPlanning() {
-  const grid = document.getElementById("weekGrid");
+function renderCalendar() {
   const days = scheduleForWeek();
-  grid.innerHTML = days
-    .map((day) => {
-      const active = day.id === state.selectedDay ? " selected" : "";
-      return `
-        <button class="week-day accent-${day.domain.accent}${active}" type="button" data-day="${day.id}">
-          <span>${escapeHtml(day.label)}</span>
-          <strong>${escapeHtml(day.domain.shortTitle)}</strong>
-          ${day.sessions
-            .map((session) => `<small>${session.start} · ${escapeHtml(session.topic?.title || "Termine")}</small>`)
-            .join("")}
-        </button>
-      `;
-    })
-    .join("");
+  const calendar = document.getElementById("weekCalendar");
 
-  grid.querySelectorAll(".week-day").forEach((button) => {
+  if (!state.selectedSessionId && days[0]?.sessions[0]) {
+    state.selectedSessionId = days[0].sessions[0].id;
+    saveSettings();
+  }
+
+  calendar.innerHTML = days.map((day) => renderDayCard(day)).join("");
+
+  calendar.querySelectorAll(".course-block").forEach((button) => {
     button.addEventListener("click", () => {
-      state.selectedDay = button.dataset.day;
+      state.selectedSessionId = button.dataset.sessionId;
       saveSettings();
-      render();
+      renderCalendar();
     });
   });
 
-  const day = days.find((item) => item.id === state.selectedDay) || days[0];
-  const detail = document.getElementById("dayDetail");
+  renderSelectedCourse(days);
+}
+
+function renderDayCard(day) {
+  return `
+    <section class="day-card">
+      <div class="day-card-header">
+        <strong>${escapeHtml(day.longLabel)}</strong>
+        <span>${escapeHtml(day.domain.title)}</span>
+      </div>
+      <div class="day-slots">
+        ${day.sessions.map((session) => renderCourseBlock(day, session)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderCourseBlock(day, session) {
+  const topic = session?.topic;
+  const selected = session?.id === state.selectedSessionId ? " selected" : "";
+  const status = topic ? getStatus(topic.id) : "done";
+  const currentLabel = day.current?.complete
+    ? "Termine"
+    : `${day.current.program.title} · ${day.current.block.title}`;
+
+  return `
+    <button class="course-block accent-${day.domain.accent}${selected}" type="button" data-session-id="${session.id}">
+      <time>${escapeHtml(session.start)}-${escapeHtml(session.end)}</time>
+      <span>${escapeHtml(day.domain.shortTitle)}</span>
+      <strong>${escapeHtml(topic?.title || "Termine")}</strong>
+      <small>${escapeHtml(currentLabel)}</small>
+      <em>${escapeHtml(statusLabels[status] || status)}</em>
+    </button>
+  `;
+}
+
+function renderSelectedCourse(days) {
+  const detail = document.getElementById("courseDetail");
+  const allSessions = days.flatMap((day) => day.sessions.map((session) => ({ ...session, day })));
+  const selected = allSessions.find((session) => session.id === state.selectedSessionId) || allSessions[0];
+
+  if (!selected?.topic) {
+    detail.innerHTML = `
+      <section class="detail-card">
+        <h2>${escapeHtml(selected?.day.domain.title || "Domaine")}</h2>
+        <p>Ce domaine est termine dans les donnees actuelles.</p>
+      </section>
+    `;
+    return;
+  }
+
+  const topic = selected.topic;
+  const current = selected.day.current;
   detail.innerHTML = `
-    <section class="card">
-      <div class="card-header">
-        <div>
-          <span class="chip">${escapeHtml(getWeek().label)}</span>
-          <h2>${escapeHtml(day.longLabel)} · ${escapeHtml(day.domain.title)}</h2>
-        </div>
+    <section class="detail-card accent-${selected.day.domain.accent}">
+      <div class="detail-head">
+        <span>${escapeHtml(selected.day.longLabel)} · ${selected.start}-${selected.end}</span>
+        <strong>${escapeHtml(selected.day.domain.title)}</strong>
       </div>
-      <div class="session-stack">
-        ${day.sessions.map((session) => renderSessionCard(session, session.topic, day.domain)).join("")}
-      </div>
+      <h2>${escapeHtml(topic.title)}</h2>
+      <p>${escapeHtml(current.program.title)} · ${escapeHtml(current.block.title)}</p>
+      <div class="resource-line">${escapeHtml((topic.resources || [])[0] || "Ressource a definir")}</div>
+      ${renderStatusActions(topic)}
     </section>
   `;
   attachStatusHandlers(detail);
 }
 
-function renderProgram() {
-  const tree = document.getElementById("programTree");
-  const topics = filteredTopics();
-  tree.innerHTML = "";
-
-  for (const domain of domains()) {
-    if (state.domainFilter !== "all" && state.domainFilter !== domain.id) continue;
-    const domainTopics = topics.filter((topic) => topic.domainId === domain.id);
-    const stats = completionStats(allTopics().filter((topic) => topic.domainId === domain.id));
-    const section = document.createElement("section");
-    section.className = `tree-domain card accent-${domain.accent}`;
-    section.innerHTML = `
-      <details open>
-        <summary>
-          <span>
-            <strong>${escapeHtml(domain.title)}</strong>
-            <small>${escapeHtml(domain.rule)}</small>
-          </span>
-          <span class="progress-chip">${stats.pct}%</span>
-        </summary>
-        <div class="tree-levels"></div>
-      </details>
-    `;
-
-    const levels = section.querySelector(".tree-levels");
-    for (const programId of domain.programIds) {
-      const program = getProgram(programId);
-      if (!program) continue;
-      const levelTopics = domainTopics.filter((topic) => topic.programId === program.id);
-      if (!levelTopics.length && (state.query || state.statusFilter !== "all")) continue;
-      const levelStats = completionStats(allTopics().filter((topic) => topic.programId === program.id));
-      const levelNode = document.createElement("details");
-      levelNode.className = "tree-level";
-      levelNode.open = programId === "l1" || domain.programIds.length === 1;
-      levelNode.innerHTML = `
-        <summary>
-          <span>${escapeHtml(program.title)}</span>
-          <span class="progress-chip">${levelStats.pct}%</span>
-        </summary>
-        <div class="tree-blocks"></div>
-      `;
-      const blocks = levelNode.querySelector(".tree-blocks");
-      program.blocks.forEach((block) => {
-        const blockTopics = levelTopics.filter((topic) => topic.blockTitle === block.title);
-        if (!blockTopics.length && (state.query || state.statusFilter !== "all")) return;
-        const blockStats = completionStats(allTopics().filter((topic) => topic.programId === program.id && topic.blockTitle === block.title));
-        const blockNode = document.createElement("details");
-        blockNode.className = "tree-block";
-        blockNode.innerHTML = `
-          <summary>
-            <span>${escapeHtml(block.title)}</span>
-            <span class="progress-chip">${blockStats.pct}%</span>
-          </summary>
-          <div class="topic-list">
-            ${blockTopics.map((topic) => renderTopicCard(topic)).join("")}
-          </div>
-        `;
-        blocks.appendChild(blockNode);
-      });
-      levels.appendChild(levelNode);
-    }
-    tree.appendChild(section);
-  }
-  attachStatusHandlers(tree);
-}
-
-function renderTopicCard(topic) {
-  return `
-    <article class="topic-card">
-      <div>
-        <h3>${escapeHtml(topic.title)}</h3>
-        <p>${escapeHtml(topic.summary || "")}</p>
-        <div class="topic-meta">
-          <span class="chip">${escapeHtml(topic.levelTitle)}</span>
-          <span class="chip">${topic.hours || 4} h</span>
-          <span class="chip">${escapeHtml(statusLabels[getStatus(topic.id)])}</span>
-        </div>
-        <ol class="resources">
-          ${(topic.resources || []).map((resource) => `<li>${escapeHtml(resource)}</li>`).join("")}
-        </ol>
-      </div>
-      ${renderStatusActions(topic)}
-    </article>
-  `;
-}
-
 function renderProgress() {
   const container = document.getElementById("progressContent");
-  container.innerHTML = `
-    <section class="metrics-grid">
-      ${renderMetric("Total", completionStats(allTopics()).pct + "%")}
-      ${renderMetric("Termine", completionStats(allTopics()).done + "/" + completionStats(allTopics()).total)}
-      ${renderMetric("En cours", String(completionStats(allTopics()).active))}
-      ${renderMetric("Restant", Math.round(completionStats(allTopics()).remainingHours) + " h")}
-    </section>
-    <section class="card">
-      <div class="card-header">
-        <h2>Progression par domaine</h2>
-      </div>
-      <div class="progress-list">
-        ${domains().map((domain) => renderDomainProgress(domain)).join("")}
-      </div>
-    </section>
-  `;
-}
-
-function renderMetric(label, value) {
-  return `<article class="metric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></article>`;
-}
-
-function renderDomainSummary(domain) {
-  const stats = completionStats(allTopics().filter((topic) => topic.domainId === domain.id));
-  return `
-    <article class="domain-card accent-${domain.accent}">
-      <strong>${escapeHtml(domain.title)}</strong>
-      <div class="progress-bar"><span style="width:${stats.pct}%"></span></div>
-      <small>${stats.pct}% · ${stats.remainingHours} h restantes</small>
-    </article>
-  `;
+  container.innerHTML = domains().map((domain) => renderDomainProgress(domain)).join("");
+  attachStatusHandlers(container);
 }
 
 function renderDomainProgress(domain) {
-  const domainTopics = allTopics().filter((topic) => topic.domainId === domain.id);
-  const stats = completionStats(domainTopics);
-  const levels = domain.programIds
-    .map((programId) => {
-      const program = getProgram(programId);
-      const levelTopics = allTopics().filter((topic) => topic.programId === programId);
-      const levelStats = completionStats(levelTopics);
-      return `
-        <div class="nested-progress">
-          <span>${escapeHtml(program?.title || programId)}</span>
-          <div class="progress-bar"><span style="width:${levelStats.pct}%"></span></div>
-          <strong>${levelStats.pct}%</strong>
+  const current = currentBlockForDomain(domain.id);
+
+  if (!current || current.complete) {
+    return `
+      <section class="progress-card accent-${domain.accent}">
+        <div class="progress-head">
+          <h2>${escapeHtml(domain.title)}</h2>
+          <span>100%</span>
         </div>
-      `;
-    })
-    .join("");
+        <p>Tout le programme visible est termine.</p>
+      </section>
+    `;
+  }
+
   return `
-    <article class="progress-domain accent-${domain.accent}">
+    <section class="progress-card accent-${domain.accent}">
       <div class="progress-head">
-        <strong>${escapeHtml(domain.title)}</strong>
-        <span>${stats.pct}%</span>
+        <h2>${escapeHtml(domain.title)}</h2>
+        <span>${current.stats.pct}%</span>
       </div>
-      <div class="progress-bar"><span style="width:${stats.pct}%"></span></div>
-      <div class="nested-list">${levels}</div>
+      <div class="current-block">
+        <span>Bloc courant</span>
+        <strong>${escapeHtml(current.program.title)}</strong>
+        <h3>${escapeHtml(current.block.title)}</h3>
+        <small>${current.stats.done}/${current.stats.total} chapitres faits</small>
+      </div>
+      <div class="progress-bar"><span style="width:${current.stats.pct}%"></span></div>
+      <div class="chapter-list">
+        ${current.topics.map((topic) => renderChapterProgress(topic)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderChapterProgress(topic) {
+  return `
+    <article class="chapter-row">
+      <div>
+        <strong>${escapeHtml(topic.title)}</strong>
+        <span>${escapeHtml(statusLabels[getStatus(topic.id)])}</span>
+      </div>
+      ${renderStatusActions(topic)}
     </article>
   `;
 }
@@ -546,6 +377,7 @@ function renderStatusActions(topic) {
   return `
     <div class="status-actions" data-topic-id="${topic.id}">
       ${Object.entries(statusLabels)
+        .filter(([key]) => key !== "todo")
         .map(([key, label]) => {
           const active = getStatus(topic.id) === key ? " active-status" : "";
           return `<button class="status-button${active}" type="button" data-status="${key}">${label}</button>`;
@@ -561,10 +393,6 @@ function attachStatusHandlers(root) {
       button.addEventListener("click", () => setStatus(group.dataset.topicId, button.dataset.status));
     });
   });
-}
-
-function compactPath(topic) {
-  return `${topic.levelTitle} > ${topic.blockTitle}`;
 }
 
 function escapeHtml(value) {
