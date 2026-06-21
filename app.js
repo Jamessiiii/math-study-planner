@@ -6,6 +6,15 @@ const MS_PER_WEEK = 7 * MS_PER_DAY;
 const TIMELINE_START_HOUR = 7;
 const TIMELINE_END_HOUR = 19;
 const TIMELINE_PX_PER_HOUR = 40;
+const DAY_DEFS = [
+  { id: "mon", label: "Lun", longLabel: "Lundi" },
+  { id: "tue", label: "Mar", longLabel: "Mardi" },
+  { id: "wed", label: "Mer", longLabel: "Mercredi" },
+  { id: "thu", label: "Jeu", longLabel: "Jeudi" },
+  { id: "fri", label: "Ven", longLabel: "Vendredi" },
+  { id: "sat", label: "Sam", longLabel: "Samedi" },
+  { id: "sun", label: "Dim", longLabel: "Dimanche" },
+];
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
 const rangeFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" });
 const yearFormatter = new Intl.DateTimeFormat("fr-FR", { year: "numeric" });
@@ -19,6 +28,8 @@ const state = {
   selectedBlockByDomain: loadSettings().selectedBlockByDomain || {},
   selectedProgramByDomain: loadSettings().selectedProgramByDomain || {},
   selectedTopicByDomain: loadSettings().selectedTopicByDomain || {},
+  selectedProgrammingWeek: loadSettings().selectedProgrammingWeek || "A",
+  planning: normalizePlanning(loadSettings().planning),
   weekOffset: loadSettings().weekOffset || 0,
   progress: loadProgress(),
 };
@@ -33,6 +44,7 @@ const statusLabels = {
 const viewTitles = {
   calendar: "Calendrier",
   progress: "Progres",
+  programming: "Programmation",
 };
 
 function loadProgress() {
@@ -65,6 +77,8 @@ function saveSettings() {
       selectedBlockByDomain: state.selectedBlockByDomain,
       selectedProgramByDomain: state.selectedProgramByDomain,
       selectedTopicByDomain: state.selectedTopicByDomain,
+      selectedProgrammingWeek: state.selectedProgrammingWeek,
+      planning: state.planning,
       weekOffset: state.weekOffset,
     })
   );
@@ -88,7 +102,81 @@ function getProgram(programId) {
 
 function getWeek() {
   const weekKey = getCurrentWeekKey(getViewedWeekStart());
-  return window.WEEK_TEMPLATES[weekKey] || window.WEEK_TEMPLATES.A;
+  return state.planning.weeks[weekKey] || state.planning.weeks.A;
+}
+
+function getSessionSlots() {
+  return state.planning.slots || [];
+}
+
+function defaultPlanning() {
+  const defaultWeeks = window.WEEK_TEMPLATES || {};
+  const fallbackDomain = domains()[0]?.id || "maths";
+  const weeks = {};
+
+  ["A", "B"].forEach((weekKey) => {
+    const source = defaultWeeks[weekKey] || { label: `Semaine ${weekKey}`, days: [] };
+    const sourceDays = new Map((source.days || []).map((day) => [day.id, day]));
+    weeks[weekKey] = {
+      label: source.label || `Semaine ${weekKey}`,
+      summary: source.summary || "",
+      days: DAY_DEFS.map((dayDef) => {
+        const sourceDay = sourceDays.get(dayDef.id);
+        return {
+          ...dayDef,
+          domainId: sourceDay?.domainId || fallbackDomain,
+          enabled: Boolean(sourceDay),
+        };
+      }),
+    };
+  });
+
+  return {
+    weeks,
+    slots: (window.SESSION_SLOTS || []).map((slot) => ({ ...slot })),
+  };
+}
+
+function normalizePlanning(raw) {
+  const base = defaultPlanning();
+  if (!raw || typeof raw !== "object") return base;
+
+  const validDomainIds = new Set(domains().map((domain) => domain.id));
+  const fallbackDomain = domains()[0]?.id || "maths";
+  const weeks = {};
+
+  ["A", "B"].forEach((weekKey) => {
+    const savedWeek = raw.weeks?.[weekKey] || {};
+    const savedDays = new Map((savedWeek.days || []).map((day) => [day.id, day]));
+    weeks[weekKey] = {
+      label: base.weeks[weekKey].label,
+      summary: savedWeek.summary || base.weeks[weekKey].summary,
+      days: DAY_DEFS.map((dayDef) => {
+        const savedDay = savedDays.get(dayDef.id);
+        const baseDay = base.weeks[weekKey].days.find((day) => day.id === dayDef.id) || {};
+        const domainId = validDomainIds.has(savedDay?.domainId) ? savedDay.domainId : baseDay.domainId || fallbackDomain;
+        return {
+          ...dayDef,
+          domainId,
+          enabled: typeof savedDay?.enabled === "boolean" ? savedDay.enabled : Boolean(baseDay.enabled),
+        };
+      }),
+    };
+  });
+
+  const slots = Array.isArray(raw.slots) && raw.slots.length
+    ? raw.slots
+        .filter((slot) => slot?.start && slot?.end)
+        .slice(0, 5)
+        .map((slot, index) => ({
+          id: slot.id || `slot-${index + 1}`,
+          label: slot.label || `Creneau ${index + 1}`,
+          start: slot.start,
+          end: slot.end,
+        }))
+    : base.slots;
+
+  return { weeks, slots };
 }
 
 function parseLocalDate(value) {
@@ -140,8 +228,11 @@ function getCurrentWeekKey(date = getViewedWeekStart()) {
 
 function getWeekRangeLabel(date = getViewedWeekStart()) {
   const monday = mondayOfWeek(date);
-  const friday = addDays(monday, 4);
-  return `${rangeFormatter.format(monday)} au ${rangeFormatter.format(friday)} ${yearFormatter.format(friday)}`;
+  const enabledDays = getWeek().days.filter((day) => day.enabled !== false);
+  const lastEnabledDay = enabledDays[enabledDays.length - 1];
+  const lastDayIndex = Math.max(0, DAY_DEFS.findIndex((day) => day.id === lastEnabledDay?.id));
+  const lastDate = addDays(monday, lastDayIndex);
+  return `${rangeFormatter.format(monday)} au ${rangeFormatter.format(lastDate)} ${yearFormatter.format(lastDate)}`;
 }
 
 function todayLabel(date = new Date()) {
@@ -184,17 +275,32 @@ function minutesFromTime(value) {
 }
 
 function timelineHours() {
+  const bounds = timelineBounds();
   return Array.from(
-    { length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1 },
-    (_, index) => TIMELINE_START_HOUR + index
+    { length: bounds.endHour - bounds.startHour + 1 },
+    (_, index) => bounds.startHour + index
   );
 }
 
+function timelineBounds() {
+  const slotMinutes = getSessionSlots()
+    .flatMap((slot) => [slot.start, slot.end])
+    .map(minutesFromTime)
+    .filter(Number.isFinite);
+  const startMinutes = slotMinutes.length ? Math.min(...slotMinutes) : TIMELINE_START_HOUR * 60;
+  const endMinutes = slotMinutes.length ? Math.max(...slotMinutes) : TIMELINE_END_HOUR * 60;
+  return {
+    startHour: Math.max(0, Math.min(TIMELINE_START_HOUR, Math.floor(startMinutes / 60))),
+    endHour: Math.min(24, Math.max(TIMELINE_END_HOUR, Math.ceil(endMinutes / 60))),
+  };
+}
+
 function timelineStyle(session) {
+  const bounds = timelineBounds();
   const start = minutesFromTime(session.start);
   const end = minutesFromTime(session.end);
-  const startMinute = TIMELINE_START_HOUR * 60;
-  const endMinute = TIMELINE_END_HOUR * 60;
+  const startMinute = bounds.startHour * 60;
+  const endMinute = bounds.endHour * 60;
   const top = ((Math.max(start, startMinute) - startMinute) / 60) * TIMELINE_PX_PER_HOUR;
   const height = ((Math.min(end, endMinute) - Math.max(start, startMinute)) / 60) * TIMELINE_PX_PER_HOUR;
   return `--event-top:${Math.max(0, top)}px;--event-height:${Math.max(34, height)}px;`;
@@ -462,13 +568,13 @@ function selectTopic(domainId, topicId) {
 
 function scheduleForWeek() {
   const monday = getViewedWeekStart();
-  return getWeek().days.map((day) => {
-    const dayIndex = ["mon", "tue", "wed", "thu", "fri"].indexOf(day.id);
+  return getWeek().days.filter((day) => day.enabled !== false).map((day) => {
+    const dayIndex = DAY_DEFS.findIndex((definition) => definition.id === day.id);
     const dayDate = addDays(monday, Math.max(dayIndex, 0));
     const domain = getDomain(day.domainId);
     const current = currentBlockForDomain(day.domainId);
     const topic = currentTopicForDomain(day.domainId);
-    const sessions = window.SESSION_SLOTS.map((slot) => {
+    const sessions = getSessionSlots().map((slot) => {
       return {
         ...slot,
         id: `${dateId(dayDate)}-${day.id}-${slot.id}`,
@@ -552,6 +658,7 @@ function render() {
   });
   renderCalendar();
   renderProgress();
+  renderProgramming();
 }
 
 function renderCalendar() {
@@ -593,6 +700,8 @@ function renderCalendar() {
 
 function renderDayCard(day) {
   const todayClass = isSameDay(day.date, new Date()) ? " today-day" : "";
+  const bounds = timelineBounds();
+  const hours = timelineHours();
   return `
     <section class="day-card accent-${day.domain.accent}${todayClass}">
       <div class="day-card-header">
@@ -602,12 +711,12 @@ function renderDayCard(day) {
           <small>${escapeHtml(day.dateLabel)} · ${escapeHtml(day.domain.title)}</small>
         </div>
       </div>
-      <div class="day-timeline" style="--timeline-hours:${TIMELINE_END_HOUR - TIMELINE_START_HOUR};--hour-size:${TIMELINE_PX_PER_HOUR}px;">
+      <div class="day-timeline" style="--timeline-hours:${bounds.endHour - bounds.startHour};--hour-size:${TIMELINE_PX_PER_HOUR}px;">
         <div class="time-rail" aria-hidden="true">
-          ${timelineHours().map((hour) => `<span>${String(hour).padStart(2, "0")}h</span>`).join("")}
+          ${hours.map((hour) => `<span>${String(hour).padStart(2, "0")}h</span>`).join("")}
         </div>
         <div class="timeline-area">
-          ${timelineHours().map((hour) => `<i style="--hour-index:${hour - TIMELINE_START_HOUR}"></i>`).join("")}
+          ${hours.map((hour) => `<i style="--hour-index:${hour - bounds.startHour}"></i>`).join("")}
           ${day.sessions.map((session) => renderCourseBlock(day, session)).join("")}
         </div>
       </div>
@@ -817,6 +926,186 @@ function attachBlockSelectorHandlers(root = document) {
       selectBlock(button.dataset.blockDomain, button.dataset.blockKey);
     });
   });
+}
+
+function selectProgrammingWeek(weekKey) {
+  state.selectedProgrammingWeek = weekKey;
+  saveSettings();
+  renderProgramming();
+}
+
+function updatePlanningDay(weekKey, dayId, patch) {
+  state.planning = normalizePlanning(state.planning);
+  const day = state.planning.weeks[weekKey].days.find((entry) => entry.id === dayId);
+  if (!day) return;
+  Object.assign(day, patch);
+  state.selectedSessionId = null;
+  saveSettings();
+  render();
+}
+
+function updatePlanningSlot(slotId, patch) {
+  state.planning = normalizePlanning(state.planning);
+  const slot = state.planning.slots.find((entry) => entry.id === slotId);
+  if (!slot) return;
+  Object.assign(slot, patch);
+  state.selectedSessionId = null;
+  saveSettings();
+  render();
+}
+
+function addPlanningSlot() {
+  state.planning = normalizePlanning(state.planning);
+  const nextIndex = state.planning.slots.length + 1;
+  state.planning.slots.push({
+    id: `custom-${Date.now()}`,
+    label: `Creneau ${nextIndex}`,
+    start: "18:00",
+    end: "19:00",
+  });
+  state.selectedSessionId = null;
+  saveSettings();
+  render();
+}
+
+function removePlanningSlot(slotId) {
+  state.planning = normalizePlanning(state.planning);
+  if (state.planning.slots.length <= 1) return;
+  state.planning.slots = state.planning.slots.filter((slot) => slot.id !== slotId);
+  state.selectedSessionId = null;
+  saveSettings();
+  render();
+}
+
+function resetPlanning() {
+  if (!confirm("Revenir au planning par defaut ?")) return;
+  state.planning = defaultPlanning();
+  state.selectedSessionId = null;
+  saveSettings();
+  render();
+}
+
+function renderProgramming() {
+  const container = document.getElementById("programmingContent");
+  if (!container) return;
+
+  const weekKey = state.selectedProgrammingWeek || "A";
+  const week = state.planning.weeks[weekKey] || state.planning.weeks.A;
+  const activeDays = week.days.filter((day) => day.enabled !== false).length;
+  const domainOptions = domains()
+    .map((domain) => `<option value="${domain.id}">${escapeHtml(domain.title)}</option>`)
+    .join("");
+
+  container.innerHTML = `
+    <section class="programming-card">
+      <div class="programming-head">
+        <div>
+          <span>Programmation</span>
+          <h2>Semaine ${escapeHtml(weekKey)}</h2>
+        </div>
+        <strong>${activeDays} jour${activeDays > 1 ? "s" : ""}</strong>
+      </div>
+      <div class="week-editor-tabs">
+        ${["A", "B"]
+          .map((key) => `<button class="week-editor-tab${key === weekKey ? " active-week-editor" : ""}" type="button" data-programming-week="${key}">Semaine ${key}</button>`)
+          .join("")}
+      </div>
+    </section>
+
+    <section class="programming-card">
+      <div class="programming-section-head">
+        <h3>Matieres</h3>
+        <span>${escapeHtml(week.label)}</span>
+      </div>
+      <div class="day-editor-list">
+        ${week.days
+          .map((day) => {
+            const domain = getDomain(day.domainId) || domains()[0];
+            return `
+              <article class="day-editor-row accent-${domain?.accent || "maths"}">
+                <label class="day-toggle">
+                  <input type="checkbox" data-planning-day-enabled="${day.id}" ${day.enabled !== false ? "checked" : ""}>
+                  <span>${escapeHtml(day.label)}</span>
+                </label>
+                <div>
+                  <strong>${escapeHtml(day.longLabel)}</strong>
+                  <select data-planning-day-domain="${day.id}" ${day.enabled === false ? "disabled" : ""}>
+                    ${domainOptions.replace(`value="${day.domainId}"`, `value="${day.domainId}" selected`)}
+                  </select>
+                </div>
+              </article>
+            `;
+          })
+          .join("")}
+      </div>
+    </section>
+
+    <section class="programming-card">
+      <div class="programming-section-head">
+        <h3>Horaires</h3>
+        <span>${state.planning.slots.length} creneau${state.planning.slots.length > 1 ? "x" : ""}</span>
+      </div>
+      <div class="slot-editor-list">
+        ${state.planning.slots
+          .map(
+            (slot) => `
+              <article class="slot-editor-row">
+                <input type="text" value="${escapeHtml(slot.label)}" aria-label="Nom du creneau" data-slot-label="${slot.id}">
+                <div>
+                  <input type="time" value="${escapeHtml(slot.start)}" aria-label="Debut" data-slot-start="${slot.id}">
+                  <input type="time" value="${escapeHtml(slot.end)}" aria-label="Fin" data-slot-end="${slot.id}">
+                  <button class="slot-delete-button" type="button" data-slot-delete="${slot.id}" ${state.planning.slots.length <= 1 ? "disabled" : ""}>Suppr.</button>
+                </div>
+              </article>
+            `
+          )
+          .join("")}
+      </div>
+      <div class="programming-actions">
+        <button class="programming-action-button" type="button" data-add-slot>Ajouter un creneau</button>
+        <button class="programming-action-button secondary-action" type="button" data-reset-planning>Defaut</button>
+      </div>
+    </section>
+  `;
+
+  attachProgrammingHandlers(container);
+}
+
+function attachProgrammingHandlers(root) {
+  root.querySelectorAll("[data-programming-week]").forEach((button) => {
+    button.addEventListener("click", () => selectProgrammingWeek(button.dataset.programmingWeek));
+  });
+
+  root.querySelectorAll("[data-planning-day-enabled]").forEach((input) => {
+    input.addEventListener("change", () => {
+      updatePlanningDay(state.selectedProgrammingWeek, input.dataset.planningDayEnabled, { enabled: input.checked });
+    });
+  });
+
+  root.querySelectorAll("[data-planning-day-domain]").forEach((select) => {
+    select.addEventListener("change", () => {
+      updatePlanningDay(state.selectedProgrammingWeek, select.dataset.planningDayDomain, { domainId: select.value });
+    });
+  });
+
+  root.querySelectorAll("[data-slot-label]").forEach((input) => {
+    input.addEventListener("change", () => updatePlanningSlot(input.dataset.slotLabel, { label: input.value.trim() || "Creneau" }));
+  });
+
+  root.querySelectorAll("[data-slot-start]").forEach((input) => {
+    input.addEventListener("change", () => updatePlanningSlot(input.dataset.slotStart, { start: input.value }));
+  });
+
+  root.querySelectorAll("[data-slot-end]").forEach((input) => {
+    input.addEventListener("change", () => updatePlanningSlot(input.dataset.slotEnd, { end: input.value }));
+  });
+
+  root.querySelectorAll("[data-slot-delete]").forEach((button) => {
+    button.addEventListener("click", () => removePlanningSlot(button.dataset.slotDelete));
+  });
+
+  root.querySelector("[data-add-slot]")?.addEventListener("click", addPlanningSlot);
+  root.querySelector("[data-reset-planning]")?.addEventListener("click", resetPlanning);
 }
 
 function renderCompletionStats() {
