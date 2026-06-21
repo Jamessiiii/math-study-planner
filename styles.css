@@ -1564,6 +1564,42 @@ h3 {
   gap: 7px;
 }
 
+.schedule-day-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.schedule-day-tab {
+  display: grid;
+  gap: 2px;
+  min-height: 48px;
+  padding: 7px 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--muted);
+  font-weight: 950;
+}
+
+.schedule-day-tab span {
+  font-size: 12px;
+}
+
+.schedule-day-tab small {
+  overflow: hidden;
+  font-size: 9px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-day-tab.active-schedule-day {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--maths) 16%, var(--control));
+  color: var(--ink);
+}
+
 .slot-times-row input[type="time"] {
   min-width: 0;
 }
