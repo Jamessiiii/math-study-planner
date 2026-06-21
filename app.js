@@ -778,30 +778,44 @@ function attachProgramSelectorHandlers(root = document) {
 
 function renderBlockSelector(domain, blocks, selectedEntry) {
   if (!blocks.length) return "";
+  const selectedLabel = selectedEntry ? selectedEntry.block.title.replace(/^Bloc\s*/i, "B") : "Choisir un bloc";
+  const selectedMarker = selectedEntry?.position === "current" ? "Courant" : selectedEntry?.position === "before" ? "Avant" : "Apres";
+  const selectedCount = selectedEntry ? `${selectedEntry.stats.done}/${selectedEntry.stats.total}` : "";
+
   return `
-    <div class="block-selector" data-block-selector="${domain.id}">
-      ${blocks
-        .map((entry) => {
-          const key = blockKey(entry);
-          const active = selectedEntry && blockKey(selectedEntry) === key ? " active-block" : "";
-          const label = entry.block.title.replace(/^Bloc\s*/i, "B");
-          const marker = entry.position === "current" ? "Courant" : entry.position === "before" ? "Avant" : "Apres";
-          return `
-            <button class="block-chip block-chip-${entry.position}${active}" type="button" data-block-domain="${domain.id}" data-block-key="${escapeHtml(key)}">
-              <span>${escapeHtml(marker)}</span>
-              <strong>${escapeHtml(label)}</strong>
-              <em>${entry.stats.done}/${entry.stats.total}</em>
-            </button>
-          `;
-        })
-        .join("")}
-    </div>
+    <details class="block-picker" data-block-selector="${domain.id}">
+      <summary class="block-picker-trigger">
+        <span>${escapeHtml(selectedMarker)}</span>
+        <strong>${escapeHtml(selectedLabel)}</strong>
+        <em>${escapeHtml(selectedCount)}</em>
+      </summary>
+      <div class="block-picker-menu" role="listbox" aria-label="Choisir un bloc">
+        ${blocks
+          .map((entry) => {
+            const key = blockKey(entry);
+            const active = selectedEntry && blockKey(selectedEntry) === key ? " active-block" : "";
+            const label = entry.block.title.replace(/^Bloc\s*/i, "B");
+            const marker = entry.position === "current" ? "Courant" : entry.position === "before" ? "Avant" : "Apres";
+            return `
+              <button class="block-option block-option-${entry.position}${active}" type="button" role="option" aria-selected="${active ? "true" : "false"}" data-block-domain="${domain.id}" data-block-key="${escapeHtml(key)}">
+                <span>${escapeHtml(marker)}</span>
+                <strong>${escapeHtml(label)}</strong>
+                <em>${entry.stats.done}/${entry.stats.total}</em>
+              </button>
+            `;
+          })
+          .join("")}
+      </div>
+    </details>
   `;
 }
 
 function attachBlockSelectorHandlers(root = document) {
   root.querySelectorAll("[data-block-key]").forEach((button) => {
-    button.addEventListener("click", () => selectBlock(button.dataset.blockDomain, button.dataset.blockKey));
+    button.addEventListener("click", () => {
+      button.closest(".block-picker")?.removeAttribute("open");
+      selectBlock(button.dataset.blockDomain, button.dataset.blockKey);
+    });
   });
 }
 
