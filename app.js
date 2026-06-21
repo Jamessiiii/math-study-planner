@@ -37,7 +37,6 @@ const state = {
   selectedTopicByDomain: loadSettings().selectedTopicByDomain || {},
   selectedProgrammingWeek: loadSettings().selectedProgrammingWeek || getCurrentWeekKey(getPlanningWeekStart()),
   selectedScheduleDay: loadSettings().selectedScheduleDay || "mon",
-  selectedScheduleDomain: loadSettings().selectedScheduleDomain || null,
   planning: normalizePlanning(loadSettings().planning),
   weekOffset: loadSettings().weekOffset || 0,
   progress: loadProgress(),
@@ -88,7 +87,6 @@ function saveSettings() {
       selectedTopicByDomain: state.selectedTopicByDomain,
       selectedProgrammingWeek: state.selectedProgrammingWeek,
       selectedScheduleDay: state.selectedScheduleDay,
-      selectedScheduleDomain: state.selectedScheduleDomain,
       planning: state.planning,
       weekOffset: state.weekOffset,
     })
@@ -972,15 +970,6 @@ function selectProgrammingWeek(weekKey) {
 
 function selectScheduleDay(dayId) {
   state.selectedScheduleDay = dayId;
-  const week = state.planning.weeks[state.selectedProgrammingWeek] || state.planning.weeks.A;
-  const day = week.days.find((entry) => entry.id === dayId);
-  state.selectedScheduleDomain = day?.domainId || state.selectedScheduleDomain;
-  saveSettings();
-  renderProgramming();
-}
-
-function selectScheduleDomain(domainId) {
-  state.selectedScheduleDomain = domainId;
   saveSettings();
   renderProgramming();
 }
@@ -990,9 +979,6 @@ function updatePlanningDay(weekKey, dayId, patch) {
   const day = state.planning.weeks[weekKey].days.find((entry) => entry.id === dayId);
   if (!day) return;
   Object.assign(day, patch);
-  if (patch.domainId && dayId === state.selectedScheduleDay) {
-    state.selectedScheduleDomain = patch.domainId;
-  }
   state.selectedSessionId = null;
   saveSettings();
   render();
@@ -1081,7 +1067,7 @@ function renderProgramming() {
   const week = state.planning.weeks[weekKey] || state.planning.weeks.A;
   const activeDays = week.days.filter((day) => day.enabled !== false).length;
   const scheduleDay = week.days.find((day) => day.id === state.selectedScheduleDay) || week.days[0];
-  const scheduleDomain = getDomain(state.selectedScheduleDomain) || getDomain(scheduleDay.domainId) || domains()[0];
+  const scheduleDomain = getDomain(scheduleDay.domainId) || domains()[0];
   const scheduleSlots = slotsForDay(scheduleDay, scheduleDomain.id);
   const slotsFull = scheduleSlots.length >= 8;
   const domainOptions = domains()
@@ -1145,13 +1131,10 @@ function renderProgramming() {
           </button>`)
           .join("")}
       </div>
-      <div class="schedule-domain-tabs" aria-label="Matiere a modifier">
-        ${domains()
-          .map((domain) => `<button class="schedule-domain-tab accent-${domain.accent}${domain.id === scheduleDomain.id ? " active-schedule-domain" : ""}" type="button" data-schedule-domain="${domain.id}">
-            <span>${escapeHtml(domain.shortTitle)}</span>
-            <small>${domain.id === scheduleDay.domainId ? "ce jour" : "option"}</small>
-          </button>`)
-          .join("")}
+      <div class="schedule-subject-badge accent-${scheduleDomain.accent}" aria-label="Matiere attribuee au jour">
+        <span>Matiere du jour</span>
+        <strong>${escapeHtml(scheduleDomain.title)}</strong>
+        <small>Pour modifier une autre matiere, change d'abord l'attribution de ${escapeHtml(scheduleDay.longLabel)}.</small>
       </div>
       <div class="slot-editor-list">
         ${scheduleSlots
@@ -1205,10 +1188,6 @@ function attachProgrammingHandlers(root) {
 
   root.querySelectorAll("[data-schedule-day]").forEach((button) => {
     button.addEventListener("click", () => selectScheduleDay(button.dataset.scheduleDay));
-  });
-
-  root.querySelectorAll("[data-schedule-domain]").forEach((button) => {
-    button.addEventListener("click", () => selectScheduleDomain(button.dataset.scheduleDomain));
   });
 
   root.querySelectorAll("[data-planning-day-enabled]").forEach((input) => {
