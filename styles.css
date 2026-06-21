@@ -107,10 +107,10 @@ h3 {
 }
 
 .week-summary {
-  display: flex;
+  display: grid;
+  grid-template-columns: 38px auto minmax(0, 1fr) 38px;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   padding: 12px;
   border: 1px solid rgba(21, 23, 21, 0.12);
   border-radius: 8px;
@@ -121,10 +121,22 @@ h3 {
 .nav-button,
 .course-block,
 .status-button,
-.danger-button {
+.danger-button,
+.week-arrow {
   border: 0;
   border-radius: 8px;
   color: var(--ink);
+}
+
+.week-arrow {
+  display: grid;
+  place-items: center;
+  min-height: 38px;
+  background: var(--ink);
+  color: white;
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1;
 }
 
 .week-summary strong {
@@ -363,6 +375,104 @@ h3 {
   box-shadow: var(--shadow);
 }
 
+.stats-card {
+  display: grid;
+  gap: 13px;
+  padding: 14px;
+  border: 1px solid rgba(21, 23, 21, 0.12);
+  border-radius: 8px;
+  background: var(--ink);
+  color: white;
+  box-shadow: var(--shadow);
+}
+
+.stats-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stats-head span {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.stats-head h2 {
+  color: white;
+}
+
+.stats-head strong {
+  flex: none;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 13px;
+}
+
+.mini-chart {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  align-items: end;
+  gap: 4px;
+  min-height: 84px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.chart-day {
+  display: grid;
+  align-items: end;
+  gap: 5px;
+  min-width: 0;
+}
+
+.chart-day span {
+  display: block;
+  width: 100%;
+  min-height: 8px;
+  border-radius: 999px 999px 2px 2px;
+  background: white;
+}
+
+.chart-day small {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 9px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.recent-list {
+  display: grid;
+  gap: 8px;
+}
+
+.recent-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.recent-list strong {
+  color: white;
+  font-size: 13px;
+}
+
+.recent-list span,
+.recent-list p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  font-weight: 850;
+  text-align: right;
+}
+
 .progress-head span {
   padding: 6px 9px;
   border-radius: 8px;
@@ -552,6 +662,10 @@ h3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: start;
   }
+
+  .stats-card {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 520px) {
@@ -566,5 +680,14 @@ h3 {
 
   .chapter-row > div:first-child {
     display: grid;
+  }
+
+  .week-summary {
+    grid-template-columns: 34px auto 1fr 34px;
+    padding: 8px;
+  }
+
+  .week-arrow {
+    min-height: 34px;
   }
 }

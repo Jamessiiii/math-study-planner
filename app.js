@@ -10,6 +10,7 @@ const yearFormatter = new Intl.DateTimeFormat("fr-FR", { year: "numeric" });
 const state = {
   view: "calendar",
   selectedSessionId: loadSettings().selectedSessionId || null,
+  weekOffset: loadSettings().weekOffset || 0,
   progress: loadProgress(),
 };
 
@@ -49,7 +50,7 @@ function saveProgress() {
 function saveSettings() {
   localStorage.setItem(
     SETTINGS_KEY,
-    JSON.stringify({ selectedSessionId: state.selectedSessionId })
+    JSON.stringify({ selectedSessionId: state.selectedSessionId, weekOffset: state.weekOffset })
   );
 }
 
@@ -70,7 +71,7 @@ function getProgram(programId) {
 }
 
 function getWeek() {
-  const weekKey = getCurrentWeekKey();
+  const weekKey = getCurrentWeekKey(getViewedWeekStart());
   return window.WEEK_TEMPLATES[weekKey] || window.WEEK_TEMPLATES.A;
 }
 
@@ -110,15 +111,19 @@ function getPlanningWeekStart(date = new Date()) {
   return monday;
 }
 
-function getCurrentWeekKey(date = new Date()) {
+function getViewedWeekStart() {
+  return addDays(getPlanningWeekStart(), state.weekOffset * 7);
+}
+
+function getCurrentWeekKey(date = getViewedWeekStart()) {
   const anchor = mondayOfWeek(parseLocalDate(WEEK_ANCHOR));
-  const current = getPlanningWeekStart(date);
+  const current = mondayOfWeek(date);
   const distance = Math.floor((current - anchor) / MS_PER_WEEK);
   return Math.abs(distance % 2) === 0 ? "A" : "B";
 }
 
-function getWeekRangeLabel(date = new Date()) {
-  const monday = getPlanningWeekStart(date);
+function getWeekRangeLabel(date = getViewedWeekStart()) {
+  const monday = mondayOfWeek(date);
   const friday = addDays(monday, 4);
   return `${rangeFormatter.format(monday)} au ${rangeFormatter.format(friday)} ${yearFormatter.format(friday)}`;
 }
@@ -140,10 +145,22 @@ function getStatus(topicId) {
 }
 
 function setStatus(topicId, status) {
-  state.progress[topicId] = {
-    ...(state.progress[topicId] || {}),
+  const now = new Date().toISOString();
+  const previous = state.progress[topicId] || {};
+  const next = {
+    ...previous,
     status,
-    updatedAt: new Date().toISOString(),
+    updatedAt: now,
+  };
+
+  if (status === "done") {
+    next.completedAt = previous.completedAt || now;
+  } else {
+    delete next.completedAt;
+  }
+
+  state.progress[topicId] = {
+    ...next,
   };
   saveProgress();
   render();
@@ -243,7 +260,7 @@ function currentTopicForDomain(domainId) {
 }
 
 function scheduleForWeek() {
-  const monday = getPlanningWeekStart();
+  const monday = getViewedWeekStart();
   return getWeek().days.map((day) => {
     const dayIndex = ["mon", "tue", "wed", "thu", "fri"].indexOf(day.id);
     const dayDate = addDays(monday, Math.max(dayIndex, 0));
@@ -268,6 +285,13 @@ function scheduleForWeek() {
   });
 }
 
+function shiftWeek(delta) {
+  state.weekOffset += delta;
+  state.selectedSessionId = null;
+  saveSettings();
+  render();
+}
+
 function initControls() {
   document.querySelectorAll(".nav-button").forEach((button) => {
     button.addEventListener("click", () => {
@@ -275,6 +299,28 @@ function initControls() {
       render();
     });
   });
+
+  const calendarView = document.getElementById("calendarView");
+  let touchStartX = null;
+  let touchStartY = null;
+
+  calendarView.addEventListener("touchstart", (event) => {
+    const touch = event.changedTouches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  }, { passive: true });
+
+  calendarView.addEventListener("touchend", (event) => {
+    if (touchStartX === null || touchStartY === null) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+    touchStartX = null;
+    touchStartY = null;
+
+    if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+    shiftWeek(dx < 0 ? 1 : -1);
+  }, { passive: true });
 
   document.getElementById("resetProgress").addEventListener("click", () => {
     if (confirm("Remettre toute la progression a zero ?")) {
@@ -303,16 +349,23 @@ function renderCalendar() {
   const days = scheduleForWeek();
   const calendar = document.getElementById("weekCalendar");
 
-  if (!state.selectedSessionId && days[0]?.sessions[0]) {
+  const visibleSessionIds = new Set(days.flatMap((day) => day.sessions.map((session) => session.id)));
+  if (!visibleSessionIds.has(state.selectedSessionId) && days[0]?.sessions[0]) {
     state.selectedSessionId = days[0].sessions[0].id;
     saveSettings();
   }
 
   document.getElementById("weekSummary").innerHTML = `
+    <button class="week-arrow" type="button" data-week-shift="-1" aria-label="Semaine precedente">‹</button>
     <strong>${escapeHtml(getWeek().label)}</strong>
     <span>Aujourd'hui ${escapeHtml(todayLabel())} · planning du ${escapeHtml(getWeekRangeLabel())}</span>
+    <button class="week-arrow" type="button" data-week-shift="1" aria-label="Semaine suivante">›</button>
   `;
   calendar.innerHTML = days.map((day) => renderDayCard(day)).join("");
+
+  document.querySelectorAll("[data-week-shift]").forEach((button) => {
+    button.addEventListener("click", () => shiftWeek(Number(button.dataset.weekShift)));
+  });
 
   calendar.querySelectorAll(".course-block").forEach((button) => {
     button.addEventListener("click", () => {
@@ -395,8 +448,89 @@ function renderSelectedCourse(days) {
 
 function renderProgress() {
   const container = document.getElementById("progressContent");
-  container.innerHTML = domains().map((domain) => renderDomainProgress(domain)).join("");
+  container.innerHTML = `
+    ${renderCompletionStats()}
+    ${domains().map((domain) => renderDomainProgress(domain)).join("")}
+  `;
   attachStatusHandlers(container);
+}
+
+function completedTopics() {
+  return allTopics()
+    .map((topic) => {
+      const progress = state.progress[topic.id];
+      if (progress?.status !== "done") return null;
+      return { ...topic, completedAt: progress.completedAt || progress.updatedAt || new Date().toISOString() };
+    })
+    .filter(Boolean)
+    .sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+}
+
+function completionDateKey(value) {
+  return dateId(new Date(value));
+}
+
+function shortCompletionDate(value) {
+  return dayFormatter.format(new Date(value));
+}
+
+function renderCompletionStats() {
+  const completed = completedTopics();
+  const recent = completed.slice(-5).reverse();
+  const byDate = new Map();
+
+  completed.forEach((topic) => {
+    const key = completionDateKey(topic.completedAt);
+    byDate.set(key, (byDate.get(key) || 0) + 1);
+  });
+
+  const days = Array.from({ length: 14 }, (_, index) => {
+    const date = addDays(startOfDay(new Date()), index - 13);
+    const key = dateId(date);
+    return { key, date, count: byDate.get(key) || 0 };
+  });
+  const max = Math.max(1, ...days.map((day) => day.count));
+
+  return `
+    <section class="stats-card">
+      <div class="stats-head">
+        <div>
+          <span>Stats</span>
+          <h2>${completed.length} chapitres finis</h2>
+        </div>
+        <strong>${recent[0] ? shortCompletionDate(recent[0].completedAt) : "Aucun"}</strong>
+      </div>
+      <div class="mini-chart" aria-label="Chapitres termines par date">
+        ${days
+          .map((day) => {
+            const height = Math.max(8, Math.round((day.count / max) * 54));
+            return `
+              <div class="chart-day" title="${escapeHtml(day.key)} : ${day.count}">
+                <span style="height:${height}px"></span>
+                <small>${day.date.getDate()}</small>
+              </div>
+            `;
+          })
+          .join("")}
+      </div>
+      <div class="recent-list">
+        ${
+          recent.length
+            ? recent
+                .map(
+                  (topic) => `
+                    <div>
+                      <strong>${escapeHtml(topic.title)}</strong>
+                      <span>${escapeHtml(shortCompletionDate(topic.completedAt))} · ${escapeHtml(topic.domainShortTitle)}</span>
+                    </div>
+                  `
+                )
+                .join("")
+            : "<p>Aucun chapitre marque fait pour l'instant.</p>"
+        }
+      </div>
+    </section>
+  `;
 }
 
 function renderDomainProgress(domain) {
