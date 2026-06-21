@@ -6,7 +6,9 @@ Prototype local de calendrier mobile pour trois domaines independants :
 - Proba : programme probabilites/statistiques
 - Informatique : programme informatique
 
-L'app suit un cycle Semaine A / Semaine B et place les prochains cours directement dans le calendrier hebdomadaire.
+L'app suit automatiquement un cycle Semaine A / Semaine B selon le vrai calendrier et place les cours directement dans le calendrier hebdomadaire.
+
+Chaque domaine avance lineairement : tous les creneaux d'un domaine pointent vers le meme chapitre courant tant que ce chapitre n'est pas marque `Fait`.
 
 Principe de simplicite : seul le bloc courant d'un domaine est visible. Par exemple, dans Maths Sup, les blocs L1 suivants restent masques tant que le Bloc 0 n'est pas termine.
 

@@ -106,18 +106,18 @@ h3 {
   display: grid;
 }
 
-.week-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--ink);
+.week-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(21, 23, 21, 0.12);
   border-radius: 8px;
-  background: var(--ink);
+  background: var(--paper-strong);
   box-shadow: var(--shadow);
 }
 
-.segment,
 .nav-button,
 .course-block,
 .status-button,
@@ -127,16 +127,22 @@ h3 {
   color: var(--ink);
 }
 
-.segment {
-  min-height: 44px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.72);
+.week-summary strong {
+  flex: none;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: white;
+  font-size: 13px;
   font-weight: 950;
 }
 
-.segment.active {
-  background: var(--paper-strong);
-  color: var(--ink);
+.week-summary span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.2;
+  text-align: right;
 }
 
 .week-calendar {
@@ -146,7 +152,7 @@ h3 {
 
 .day-card {
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
+  grid-template-columns: 66px minmax(0, 1fr);
   gap: 9px;
   padding: 10px 0;
   border-top: 1px solid rgba(21, 23, 21, 0.12);
@@ -521,14 +527,14 @@ h3 {
 
 @media (min-width: 760px) {
   .week-calendar {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     align-items: start;
   }
 
   .day-card {
-    grid-template-columns: 1fr;
-    padding: 0;
-    border-top: 0;
+    grid-template-columns: 96px minmax(0, 1fr);
+    padding: 10px 0;
+    border-top: 1px solid rgba(21, 23, 21, 0.12);
   }
 
   .day-card-header {
@@ -538,8 +544,8 @@ h3 {
   }
 
   .day-card-header div {
-    justify-items: start;
-    text-align: left;
+    justify-items: center;
+    text-align: center;
   }
 
   .progress-content {

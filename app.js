@@ -1,9 +1,14 @@
 const STORAGE_KEY = "math-study-planner-state-v3";
 const SETTINGS_KEY = `${STORAGE_KEY}:settings`;
+const WEEK_ANCHOR = "2026-06-15";
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const MS_PER_WEEK = 7 * MS_PER_DAY;
+const dayFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
+const rangeFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" });
+const yearFormatter = new Intl.DateTimeFormat("fr-FR", { year: "numeric" });
 
 const state = {
   view: "calendar",
-  week: loadSettings().week || "A",
   selectedSessionId: loadSettings().selectedSessionId || null,
   progress: loadProgress(),
 };
@@ -44,7 +49,7 @@ function saveProgress() {
 function saveSettings() {
   localStorage.setItem(
     SETTINGS_KEY,
-    JSON.stringify({ week: state.week, selectedSessionId: state.selectedSessionId })
+    JSON.stringify({ selectedSessionId: state.selectedSessionId })
   );
 }
 
@@ -65,7 +70,69 @@ function getProgram(programId) {
 }
 
 function getWeek() {
-  return window.WEEK_TEMPLATES[state.week] || window.WEEK_TEMPLATES.A;
+  const weekKey = getCurrentWeekKey();
+  return window.WEEK_TEMPLATES[weekKey] || window.WEEK_TEMPLATES.A;
+}
+
+function parseLocalDate(value) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function mondayOfWeek(date) {
+  const dayIndex = (date.getDay() + 6) % 7;
+  const monday = startOfDay(date);
+  monday.setDate(monday.getDate() - dayIndex);
+  return monday;
+}
+
+function addDays(date, count) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + count);
+  return next;
+}
+
+function getWeekStart(date = new Date()) {
+  return mondayOfWeek(date);
+}
+
+function getPlanningWeekStart(date = new Date()) {
+  const today = startOfDay(date);
+  const day = today.getDay();
+  const monday = mondayOfWeek(today);
+
+  if (day === 0) return addDays(monday, 7);
+  if (day === 6) return addDays(monday, 7);
+  return monday;
+}
+
+function getCurrentWeekKey(date = new Date()) {
+  const anchor = mondayOfWeek(parseLocalDate(WEEK_ANCHOR));
+  const current = getPlanningWeekStart(date);
+  const distance = Math.floor((current - anchor) / MS_PER_WEEK);
+  return Math.abs(distance % 2) === 0 ? "A" : "B";
+}
+
+function getWeekRangeLabel(date = new Date()) {
+  const monday = getPlanningWeekStart(date);
+  const friday = addDays(monday, 4);
+  return `${rangeFormatter.format(monday)} au ${rangeFormatter.format(friday)} ${yearFormatter.format(friday)}`;
+}
+
+function todayLabel(date = new Date()) {
+  return `${rangeFormatter.format(date)} ${yearFormatter.format(date)}`;
+}
+
+function dateId(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
 }
 
 function getStatus(topicId) {
@@ -169,23 +236,35 @@ function nextTopicsForDomain(domainId, count = 2) {
   return current.topics.filter((topic) => getStatus(topic.id) !== "done").slice(0, count);
 }
 
+function currentTopicForDomain(domainId) {
+  const current = currentBlockForDomain(domainId);
+  if (!current || current.complete) return null;
+  return current.topics.find((topic) => getStatus(topic.id) !== "done") || null;
+}
+
 function scheduleForWeek() {
-  const counters = {};
+  const monday = getPlanningWeekStart();
   return getWeek().days.map((day) => {
+    const dayIndex = ["mon", "tue", "wed", "thu", "fri"].indexOf(day.id);
+    const dayDate = addDays(monday, Math.max(dayIndex, 0));
     const domain = getDomain(day.domainId);
     const current = currentBlockForDomain(day.domainId);
-    const candidates = nextTopicsForDomain(day.domainId, 8);
+    const topic = currentTopicForDomain(day.domainId);
     const sessions = window.SESSION_SLOTS.map((slot) => {
-      const index = counters[day.domainId] || 0;
-      const topic = candidates[index] || candidates[candidates.length - 1] || null;
-      counters[day.domainId] = index + 1;
       return {
         ...slot,
-        id: `${state.week}-${day.id}-${slot.id}`,
+        id: `${dateId(dayDate)}-${day.id}-${slot.id}`,
         topic,
       };
     });
-    return { ...day, domain, current, sessions };
+    return {
+      ...day,
+      domain,
+      current,
+      date: dayDate,
+      dateLabel: dayFormatter.format(dayDate),
+      sessions,
+    };
   });
 }
 
@@ -193,15 +272,6 @@ function initControls() {
   document.querySelectorAll(".nav-button").forEach((button) => {
     button.addEventListener("click", () => {
       state.view = button.dataset.view;
-      render();
-    });
-  });
-
-  document.querySelectorAll(".segment").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.week = button.dataset.week;
-      state.selectedSessionId = null;
-      saveSettings();
       render();
     });
   });
@@ -217,7 +287,7 @@ function initControls() {
 
 function render() {
   document.getElementById("viewTitle").textContent = viewTitles[state.view];
-  document.getElementById("weekEyebrow").textContent = `${getWeek().label} · planning`;
+  document.getElementById("weekEyebrow").textContent = `${getWeek().label} automatique`;
 
   document.querySelectorAll(".view").forEach((view) => view.classList.remove("active-view"));
   document.getElementById(`${state.view}View`).classList.add("active-view");
@@ -225,10 +295,6 @@ function render() {
   document.querySelectorAll(".nav-button").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === state.view);
   });
-  document.querySelectorAll(".segment").forEach((button) => {
-    button.classList.toggle("active", button.dataset.week === state.week);
-  });
-
   renderCalendar();
   renderProgress();
 }
@@ -242,6 +308,10 @@ function renderCalendar() {
     saveSettings();
   }
 
+  document.getElementById("weekSummary").innerHTML = `
+    <strong>${escapeHtml(getWeek().label)}</strong>
+    <span>Aujourd'hui ${escapeHtml(todayLabel())} · planning du ${escapeHtml(getWeekRangeLabel())}</span>
+  `;
   calendar.innerHTML = days.map((day) => renderDayCard(day)).join("");
 
   calendar.querySelectorAll(".course-block").forEach((button) => {
@@ -262,7 +332,7 @@ function renderDayCard(day) {
         <span>${escapeHtml(day.label)}</span>
         <div>
           <strong>${escapeHtml(day.longLabel)}</strong>
-          <small>${escapeHtml(day.domain.title)}</small>
+          <small>${escapeHtml(day.dateLabel)} · ${escapeHtml(day.domain.title)}</small>
         </div>
       </div>
       <div class="day-slots">
@@ -311,7 +381,7 @@ function renderSelectedCourse(days) {
   detail.innerHTML = `
     <section class="detail-card accent-${selected.day.domain.accent}">
       <div class="detail-head">
-        <span>${escapeHtml(selected.day.longLabel)} · ${selected.start}-${selected.end}</span>
+        <span>${escapeHtml(selected.day.longLabel)} ${escapeHtml(selected.day.dateLabel)} · ${selected.start}-${selected.end}</span>
         <strong>${escapeHtml(selected.day.domain.title)}</strong>
       </div>
       <h2>${escapeHtml(topic.title)}</h2>
