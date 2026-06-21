@@ -37,6 +37,7 @@ const state = {
   selectedTopicByDomain: loadSettings().selectedTopicByDomain || {},
   selectedProgrammingWeek: loadSettings().selectedProgrammingWeek || getCurrentWeekKey(getPlanningWeekStart()),
   selectedScheduleDay: loadSettings().selectedScheduleDay || "mon",
+  selectedScheduleDomain: loadSettings().selectedScheduleDomain || null,
   planning: normalizePlanning(loadSettings().planning),
   weekOffset: loadSettings().weekOffset || 0,
   progress: loadProgress(),
@@ -87,6 +88,7 @@ function saveSettings() {
       selectedTopicByDomain: state.selectedTopicByDomain,
       selectedProgrammingWeek: state.selectedProgrammingWeek,
       selectedScheduleDay: state.selectedScheduleDay,
+      selectedScheduleDomain: state.selectedScheduleDomain,
       planning: state.planning,
       weekOffset: state.weekOffset,
     })
@@ -127,8 +129,8 @@ function normalizeSlots(slots, fallbackSlots = []) {
     }));
 }
 
-function slotsForDay(day) {
-  return normalizeSlots(day?.slots, state.planning.slots || []);
+function slotsForDay(day, domainId = day?.domainId) {
+  return normalizeSlots(day?.slotsByDomain?.[domainId], day?.slots || state.planning.slots || []);
 }
 
 function visibleWeekSlots() {
@@ -140,6 +142,7 @@ function visibleWeekSlots() {
 function defaultPlanning() {
   const defaultWeeks = window.WEEK_TEMPLATES || {};
   const fallbackDomain = domains()[0]?.id || "maths";
+  const domainIds = domains().map((domain) => domain.id);
   const defaultSlots = normalizeSlots(window.SESSION_SLOTS || []);
   const weeks = {};
 
@@ -156,6 +159,7 @@ function defaultPlanning() {
           domainId: sourceDay?.domainId || fallbackDomain,
           enabled: Boolean(sourceDay),
           slots: defaultSlots.map((slot) => ({ ...slot })),
+          slotsByDomain: Object.fromEntries(domainIds.map((domainId) => [domainId, defaultSlots.map((slot) => ({ ...slot }))])),
         };
       }),
     };
@@ -172,6 +176,7 @@ function normalizePlanning(raw) {
   if (!raw || typeof raw !== "object") return base;
 
   const validDomainIds = new Set(domains().map((domain) => domain.id));
+  const domainIds = domains().map((domain) => domain.id);
   const fallbackDomain = domains()[0]?.id || "maths";
   const legacySlots = normalizeSlots(raw.slots, base.slots);
   const weeks = {};
@@ -186,11 +191,20 @@ function normalizePlanning(raw) {
         const savedDay = savedDays.get(dayDef.id);
         const baseDay = base.weeks[weekKey].days.find((day) => day.id === dayDef.id) || {};
         const domainId = validDomainIds.has(savedDay?.domainId) ? savedDay.domainId : baseDay.domainId || fallbackDomain;
+        const daySlots = normalizeSlots(savedDay?.slots, legacySlots.length ? legacySlots : baseDay.slots);
+        const savedSlotsByDomain = savedDay?.slotsByDomain || {};
+        const slotsByDomain = Object.fromEntries(
+          domainIds.map((currentDomainId) => {
+            const fallbackSlots = currentDomainId === domainId ? daySlots : legacySlots.length ? legacySlots : baseDay.slots;
+            return [currentDomainId, normalizeSlots(savedSlotsByDomain[currentDomainId], fallbackSlots)];
+          })
+        );
         return {
           ...dayDef,
           domainId,
           enabled: typeof savedDay?.enabled === "boolean" ? savedDay.enabled : Boolean(baseDay.enabled),
-          slots: normalizeSlots(savedDay?.slots, legacySlots.length ? legacySlots : baseDay.slots),
+          slots: daySlots,
+          slotsByDomain,
         };
       }),
     };
@@ -958,6 +972,15 @@ function selectProgrammingWeek(weekKey) {
 
 function selectScheduleDay(dayId) {
   state.selectedScheduleDay = dayId;
+  const week = state.planning.weeks[state.selectedProgrammingWeek] || state.planning.weeks.A;
+  const day = week.days.find((entry) => entry.id === dayId);
+  state.selectedScheduleDomain = day?.domainId || state.selectedScheduleDomain;
+  saveSettings();
+  renderProgramming();
+}
+
+function selectScheduleDomain(domainId) {
+  state.selectedScheduleDomain = domainId;
   saveSettings();
   renderProgramming();
 }
@@ -967,6 +990,9 @@ function updatePlanningDay(weekKey, dayId, patch) {
   const day = state.planning.weeks[weekKey].days.find((entry) => entry.id === dayId);
   if (!day) return;
   Object.assign(day, patch);
+  if (patch.domainId && dayId === state.selectedScheduleDay) {
+    state.selectedScheduleDomain = patch.domainId;
+  }
   state.selectedSessionId = null;
   saveSettings();
   render();
@@ -977,10 +1003,18 @@ function getPlanningDay(weekKey, dayId) {
   return state.planning.weeks[weekKey]?.days.find((entry) => entry.id === dayId) || null;
 }
 
-function updatePlanningSlot(weekKey, dayId, slotId, patch) {
+function slotsForPlanningDay(day, domainId) {
+  if (!day.slotsByDomain) day.slotsByDomain = {};
+  if (!day.slotsByDomain[domainId]) {
+    day.slotsByDomain[domainId] = normalizeSlots(day.slots, state.planning.slots || []);
+  }
+  return day.slotsByDomain[domainId];
+}
+
+function updatePlanningSlot(weekKey, dayId, domainId, slotId, patch) {
   const day = getPlanningDay(weekKey, dayId);
   if (!day) return;
-  const slot = day.slots.find((entry) => entry.id === slotId);
+  const slot = slotsForPlanningDay(day, domainId).find((entry) => entry.id === slotId);
   if (!slot) return;
   Object.assign(slot, patch);
   state.selectedSessionId = null;
@@ -992,12 +1026,14 @@ function getSlotPreset(presetId) {
   return SLOT_PRESETS.find((preset) => preset.id === presetId) || null;
 }
 
-function addPlanningSlot(weekKey, dayId, presetId = "evening") {
+function addPlanningSlot(weekKey, dayId, domainId, presetId = "evening") {
   const day = getPlanningDay(weekKey, dayId);
-  if (!day || day.slots.length >= 8) return;
+  if (!day) return;
+  const slots = slotsForPlanningDay(day, domainId);
+  if (slots.length >= 8) return;
   const preset = getSlotPreset(presetId) || getSlotPreset("evening") || SLOT_PRESETS[0];
-  const nextIndex = day.slots.length + 1;
-  day.slots.push({
+  const nextIndex = slots.length + 1;
+  slots.push({
     id: `custom-${Date.now()}`,
     label: preset?.label || `Creneau ${nextIndex}`,
     start: preset?.start || "18:00",
@@ -1008,20 +1044,22 @@ function addPlanningSlot(weekKey, dayId, presetId = "evening") {
   render();
 }
 
-function applyPlanningSlotPreset(weekKey, dayId, slotId, presetId) {
+function applyPlanningSlotPreset(weekKey, dayId, domainId, slotId, presetId) {
   const preset = getSlotPreset(presetId);
   if (!preset) return;
-  updatePlanningSlot(weekKey, dayId, slotId, {
+  updatePlanningSlot(weekKey, dayId, domainId, slotId, {
     label: preset.label,
     start: preset.start,
     end: preset.end,
   });
 }
 
-function removePlanningSlot(weekKey, dayId, slotId) {
+function removePlanningSlot(weekKey, dayId, domainId, slotId) {
   const day = getPlanningDay(weekKey, dayId);
-  if (!day || day.slots.length <= 1) return;
-  day.slots = day.slots.filter((slot) => slot.id !== slotId);
+  if (!day) return;
+  const slots = slotsForPlanningDay(day, domainId);
+  if (slots.length <= 1) return;
+  day.slotsByDomain[domainId] = slots.filter((slot) => slot.id !== slotId);
   state.selectedSessionId = null;
   saveSettings();
   render();
@@ -1043,7 +1081,9 @@ function renderProgramming() {
   const week = state.planning.weeks[weekKey] || state.planning.weeks.A;
   const activeDays = week.days.filter((day) => day.enabled !== false).length;
   const scheduleDay = week.days.find((day) => day.id === state.selectedScheduleDay) || week.days[0];
-  const slotsFull = scheduleDay.slots.length >= 8;
+  const scheduleDomain = getDomain(state.selectedScheduleDomain) || getDomain(scheduleDay.domainId) || domains()[0];
+  const scheduleSlots = slotsForDay(scheduleDay, scheduleDomain.id);
+  const slotsFull = scheduleSlots.length >= 8;
   const domainOptions = domains()
     .map((domain) => `<option value="${domain.id}">${escapeHtml(domain.title)}</option>`)
     .join("");
@@ -1095,7 +1135,7 @@ function renderProgramming() {
     <section class="programming-card">
       <div class="programming-section-head">
         <h3>Horaires</h3>
-        <span>${escapeHtml(scheduleDay.longLabel)} · ${scheduleDay.slots.length} creneau${scheduleDay.slots.length > 1 ? "x" : ""}</span>
+        <span>${escapeHtml(scheduleDay.longLabel)} · ${escapeHtml(scheduleDomain.shortTitle)} · ${scheduleSlots.length} creneau${scheduleSlots.length > 1 ? "x" : ""}</span>
       </div>
       <div class="schedule-day-tabs" aria-label="Jour a modifier">
         ${week.days
@@ -1105,29 +1145,37 @@ function renderProgramming() {
           </button>`)
           .join("")}
       </div>
+      <div class="schedule-domain-tabs" aria-label="Matiere a modifier">
+        ${domains()
+          .map((domain) => `<button class="schedule-domain-tab accent-${domain.accent}${domain.id === scheduleDomain.id ? " active-schedule-domain" : ""}" type="button" data-schedule-domain="${domain.id}">
+            <span>${escapeHtml(domain.shortTitle)}</span>
+            <small>${domain.id === scheduleDay.domainId ? "ce jour" : "option"}</small>
+          </button>`)
+          .join("")}
+      </div>
       <div class="slot-editor-list">
-        ${scheduleDay.slots
+        ${scheduleSlots
           .map(
             (slot) => `
               <article class="slot-editor-row">
                 <div class="slot-editor-header">
-                  <input type="text" value="${escapeHtml(slot.label)}" aria-label="Nom du creneau" data-slot-label="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}">
-                  <button class="slot-delete-icon" type="button" data-slot-delete="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" ${scheduleDay.slots.length <= 1 ? "disabled" : ""} aria-label="Supprimer ce creneau">×</button>
+                  <input type="text" value="${escapeHtml(slot.label)}" aria-label="Nom du creneau" data-slot-label="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" data-slot-domain="${scheduleDomain.id}">
+                  <button class="slot-delete-icon" type="button" data-slot-delete="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" data-slot-domain="${scheduleDomain.id}" ${scheduleSlots.length <= 1 ? "disabled" : ""} aria-label="Supprimer ce creneau">×</button>
                 </div>
                 <div class="slot-editor-body">
                   <div class="slot-times-row">
                     <label class="slot-field">
                       <span>Debut</span>
-                      <input type="time" value="${escapeHtml(slot.start)}" aria-label="Debut" data-slot-start="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}">
+                      <input type="time" value="${escapeHtml(slot.start)}" aria-label="Debut" data-slot-start="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" data-slot-domain="${scheduleDomain.id}">
                     </label>
                     <label class="slot-field">
                       <span>Fin</span>
-                      <input type="time" value="${escapeHtml(slot.end)}" aria-label="Fin" data-slot-end="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}">
+                      <input type="time" value="${escapeHtml(slot.end)}" aria-label="Fin" data-slot-end="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" data-slot-domain="${scheduleDomain.id}">
                     </label>
                   </div>
                   <label class="slot-field">
                     <span>Mode rapide</span>
-                    <select data-slot-preset="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" aria-label="Mode rapide pour ${escapeHtml(slot.label)}">
+                    <select data-slot-preset="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" data-slot-domain="${scheduleDomain.id}" aria-label="Mode rapide pour ${escapeHtml(slot.label)}">
                       <option value="">Choisir un horaire</option>
                       ${SLOT_PRESETS.map((preset) => `<option value="${preset.id}">${escapeHtml(preset.label)} · ${escapeHtml(preset.start)}-${escapeHtml(preset.end)}</option>`).join("")}
                     </select>
@@ -1139,7 +1187,7 @@ function renderProgramming() {
           .join("")}
       </div>
       <div class="slot-add-grid">
-        ${SLOT_PRESETS.map((preset) => `<button class="slot-add-button" type="button" data-add-slot-preset="${preset.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" ${slotsFull ? "disabled" : ""}>+ ${escapeHtml(preset.label)}</button>`).join("")}
+        ${SLOT_PRESETS.map((preset) => `<button class="slot-add-button" type="button" data-add-slot-preset="${preset.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" data-slot-domain="${scheduleDomain.id}" ${slotsFull ? "disabled" : ""}>+ ${escapeHtml(preset.label)}</button>`).join("")}
       </div>
       <div class="programming-actions">
         <button class="programming-action-button secondary-action" type="button" data-reset-planning>Defaut</button>
@@ -1159,6 +1207,10 @@ function attachProgrammingHandlers(root) {
     button.addEventListener("click", () => selectScheduleDay(button.dataset.scheduleDay));
   });
 
+  root.querySelectorAll("[data-schedule-domain]").forEach((button) => {
+    button.addEventListener("click", () => selectScheduleDomain(button.dataset.scheduleDomain));
+  });
+
   root.querySelectorAll("[data-planning-day-enabled]").forEach((input) => {
     input.addEventListener("change", () => {
       updatePlanningDay(state.selectedProgrammingWeek, input.dataset.planningDayEnabled, { enabled: input.checked });
@@ -1173,34 +1225,34 @@ function attachProgrammingHandlers(root) {
 
   root.querySelectorAll("[data-slot-label]").forEach((input) => {
     input.addEventListener("change", () => {
-      updatePlanningSlot(input.dataset.slotWeek, input.dataset.slotDay, input.dataset.slotLabel, { label: input.value.trim() || "Creneau" });
+      updatePlanningSlot(input.dataset.slotWeek, input.dataset.slotDay, input.dataset.slotDomain, input.dataset.slotLabel, { label: input.value.trim() || "Creneau" });
     });
   });
 
   root.querySelectorAll("[data-slot-start]").forEach((input) => {
     input.addEventListener("change", () => {
-      updatePlanningSlot(input.dataset.slotWeek, input.dataset.slotDay, input.dataset.slotStart, { start: input.value });
+      updatePlanningSlot(input.dataset.slotWeek, input.dataset.slotDay, input.dataset.slotDomain, input.dataset.slotStart, { start: input.value });
     });
   });
 
   root.querySelectorAll("[data-slot-end]").forEach((input) => {
     input.addEventListener("change", () => {
-      updatePlanningSlot(input.dataset.slotWeek, input.dataset.slotDay, input.dataset.slotEnd, { end: input.value });
+      updatePlanningSlot(input.dataset.slotWeek, input.dataset.slotDay, input.dataset.slotDomain, input.dataset.slotEnd, { end: input.value });
     });
   });
 
   root.querySelectorAll("[data-slot-delete]").forEach((button) => {
-    button.addEventListener("click", () => removePlanningSlot(button.dataset.slotWeek, button.dataset.slotDay, button.dataset.slotDelete));
+    button.addEventListener("click", () => removePlanningSlot(button.dataset.slotWeek, button.dataset.slotDay, button.dataset.slotDomain, button.dataset.slotDelete));
   });
 
   root.querySelectorAll("[data-slot-preset]").forEach((select) => {
     select.addEventListener("change", () => {
-      applyPlanningSlotPreset(select.dataset.slotWeek, select.dataset.slotDay, select.dataset.slotPreset, select.value);
+      applyPlanningSlotPreset(select.dataset.slotWeek, select.dataset.slotDay, select.dataset.slotDomain, select.dataset.slotPreset, select.value);
     });
   });
 
   root.querySelectorAll("[data-add-slot-preset]").forEach((button) => {
-    button.addEventListener("click", () => addPlanningSlot(button.dataset.slotWeek, button.dataset.slotDay, button.dataset.addSlotPreset));
+    button.addEventListener("click", () => addPlanningSlot(button.dataset.slotWeek, button.dataset.slotDay, button.dataset.slotDomain, button.dataset.addSlotPreset));
   });
 
   root.querySelector("[data-reset-planning]")?.addEventListener("click", resetPlanning);
