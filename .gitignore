@@ -3,3 +3,5 @@ output/
 AGENTS.md
 Sources
 .codex-workspace/
+.codex_tmp/
+.workflow/

@@ -21,7 +21,9 @@ window.STUDY_PROGRAM = [
         items: [
           item("l1-01", "Logique et raisonnement", "Connecteurs, quantificateurs, preuve par contraposée, absurde et recurrence.", ["Algebre et Geometrie L1, chapitre 1", "Algebre et Analyse L1, chapitre 1"], 5, 1),
           item("l1-02", "Ensembles et applications", "Union, intersection, complementaire, injection, surjection, bijection.", ["Algebre et Geometrie L1, chapitre 1", "Algebre et Analyse L1, chapitre 2"], 5, 1),
-          item("l1-03", "Techniques de calcul et trigonometrie", "Calcul algebrique, sommes, produits, inegalites et trigonometrie de base.", ["Techniques en analyse - inegalites", "MPSI, chapitres 1 et 2", "Calcul algebrique - sommes et produits"], 6, 1),
+          item("l1-03", "Techniques en analyse", "Inegalites et techniques de base en analyse.", ["Techniques en analyse 1 - Inegalites"], 4, 1),
+          item("l1-03b", "Trigonometrie", "Formules et manipulations trigonometriques de premiere annee.", ["Toutes les mathematiques premiere annee de MPSI, chapitres 1 et 2"], 4, 1),
+          item("l1-03c", "Calcul algebrique", "Sommes, produits et manipulations algebriques fondamentales.", ["Calcul algebrique 1 - Sommes et produits"], 4, 1),
           item("l1-04", "Le corps des reels", "Borne superieure, intervalles, ordre et topologie de la droite reelle.", ["Analyse et probabilite L1, chapitre 1", "Algebre et Geometrie L1, chapitre 2", "Algebre et Analyse L1, chapitre 3"], 6, 1),
         ],
       },
@@ -177,7 +179,7 @@ window.STUDY_PROGRAM = [
     phase: phases.proba,
     blocks: [
       {
-        title: "Fondamentaux et probabilites",
+        title: "Bloc 1 - Fondamentaux et probabilites",
         items: [
           item("ps-01", "Statistique descriptive", "Tableaux, indicateurs, dispersion et representations.", ["Statistique descriptive, Mementos LMD"], 5, 2),
           item("ps-02", "Probabilites L1", "Denombrement, probabilites finies, variables et vecteurs aleatoires finis.", ["Analyse et probabilite L1, chapitres 12 a 15", "Emmanuel Bougnol, playlists denombrement/probabilite/variables aleatoires"], 8, 1),
@@ -187,7 +189,7 @@ window.STUDY_PROGRAM = [
         ],
       },
       {
-        title: "Statistique, series temporelles et ML",
+        title: "Bloc 2 - Statistique, series temporelles et ML",
         items: [
           item("ps-06", "Statistique inferentielle", "Estimation, tests, intervalles et modeles statistiques.", ["Olivier Marchal, Statistiques inferentielles"], 10, 1),
           item("ps-07", "Series temporelles", "Modeles temporels, stationnarite, prevision et analyse appliquee.", ["Bourbonnais et Terraza, Analyse des series temporelles, 3e edition"], 10, 2),
@@ -205,15 +207,14 @@ window.STUDY_PROGRAM.push({
   phase: "Domaine 3 - Informatique",
   blocks: [
     {
-      title: "Chapitre 1 - Informatique lycee",
+      title: "Bloc 1 - Informatique lycee",
       items: [
-        item("info-01", "NSI Premiere - algorithmique", "Bases d'algorithmique, variables, conditions, boucles et fonctions.", ["Notes algorithmiques Grafikart", "Livre NSI Premiere, chapitres 1 a 5"], 8, 1),
-        item("info-02", "NSI Premiere - exercices", "Exercices de consolidation sur les premiers chapitres de NSI Premiere.", ["Exercices du chapitre 1 a 5"], 6, 1),
+        item("info-01", "NSI Premiere", "Bases d'algorithmique, variables, conditions, boucles et fonctions.", ["Notes algorithmiques Grafikart", "Livre NSI Premiere, chapitres 1 a 5", "Exercices du chapitre 1 a 5"], 8, 1),
         item("info-03", "NSI Terminale", "Approfondissement des structures de donnees, graphes et programmation.", ["Programme NSI Terminale"], 10, 2),
       ],
     },
     {
-      title: "Chapitre 2 - Python",
+      title: "Bloc 2 - Python",
       items: [
         item("info-04", "IDE et environnement", "Prise en main de Visual Studio Code et organisation du travail Python.", ["Playlist Visual Studio Code"], 4, 2),
         item("info-05", "Introduction a Python", "Syntaxe, types, fonctions, modules et premiers scripts.", ["Python cours video", "Cours Udemy Python"], 10, 1),
@@ -222,7 +223,7 @@ window.STUDY_PROGRAM.push({
       ],
     },
     {
-      title: "Chapitre 3 - Informatique sup",
+      title: "Bloc 3 - Informatique sup",
       items: [
         item("info-08", "Architecture des machines", "Bases de l'architecture machine, memoire, processeur et representation.", ["Cours d'architecture EvoluNoob"], 8, 2),
         item("info-09", "Introduction a l'assembleur", "Premiers modeles d'execution bas niveau et logique assembleur.", ["Cours assembleur EvoluNoob"], 8, 2),
@@ -231,7 +232,7 @@ window.STUDY_PROGRAM.push({
       ],
     },
     {
-      title: "Chapitre 4 - Projets",
+      title: "Bloc 4 - Projets",
       items: [
         item("info-12", "Algorithmique avancee", "Renforcer les algorithmes classiques et les raisonnements de complexite.", ["Algorithmique ++"], 12, 1),
         item("info-13", "HTML et CSS", "Bases de l'integration web et interfaces simples.", ["HTML5 et CSS3 - formation ultime"], 8, 2),

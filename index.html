@@ -31,15 +31,20 @@
 
         <section id="progressView" class="view" aria-labelledby="viewTitle">
           <div id="progressContent" class="progress-content"></div>
-          <button id="resetProgress" class="danger-button" type="button">Remettre a zero</button>
+          <details class="danger-zone">
+            <summary>Options avancees</summary>
+            <button id="resetProgress" class="danger-button" type="button">Remettre a zero</button>
+          </details>
         </section>
       </main>
 
       <nav class="bottom-nav" aria-label="Navigation principale">
         <button class="nav-button active" type="button" data-view="calendar">
+          <span class="nav-icon nav-icon-calendar" aria-hidden="true"></span>
           <strong>Calendrier</strong>
         </button>
         <button class="nav-button" type="button" data-view="progress">
+          <span class="nav-icon nav-icon-progress" aria-hidden="true"></span>
           <strong>Progres</strong>
         </button>
       </nav>

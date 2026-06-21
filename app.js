@@ -3,15 +3,22 @@ const SETTINGS_KEY = `${STORAGE_KEY}:settings`;
 const WEEK_ANCHOR = "2026-06-15";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MS_PER_WEEK = 7 * MS_PER_DAY;
+const TIMELINE_START_HOUR = 7;
+const TIMELINE_END_HOUR = 19;
+const TIMELINE_PX_PER_HOUR = 40;
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
 const rangeFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" });
 const yearFormatter = new Intl.DateTimeFormat("fr-FR", { year: "numeric" });
 const monthDayFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "numeric" });
+const timeFormatter = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
 const state = {
   view: "calendar",
   selectedSessionId: loadSettings().selectedSessionId || null,
   selectedDomainId: loadSettings().selectedDomainId || "maths",
+  selectedBlockByDomain: loadSettings().selectedBlockByDomain || {},
+  selectedProgramByDomain: loadSettings().selectedProgramByDomain || {},
+  selectedTopicByDomain: loadSettings().selectedTopicByDomain || {},
   weekOffset: loadSettings().weekOffset || 0,
   progress: loadProgress(),
 };
@@ -55,6 +62,9 @@ function saveSettings() {
     JSON.stringify({
       selectedSessionId: state.selectedSessionId,
       selectedDomainId: state.selectedDomainId,
+      selectedBlockByDomain: state.selectedBlockByDomain,
+      selectedProgramByDomain: state.selectedProgramByDomain,
+      selectedTopicByDomain: state.selectedTopicByDomain,
       weekOffset: state.weekOffset,
     })
   );
@@ -144,6 +154,50 @@ function dateId(date) {
     String(date.getMonth() + 1).padStart(2, "0"),
     String(date.getDate()).padStart(2, "0"),
   ].join("-");
+}
+
+function isSameDay(a, b) {
+  return dateId(a) === dateId(b);
+}
+
+function sessionTimingLabel(dayDate, session) {
+  const now = new Date();
+  const [startHour, startMinute] = session.start.split(":").map(Number);
+  const [endHour, endMinute] = session.end.split(":").map(Number);
+  const startsAt = new Date(dayDate);
+  startsAt.setHours(startHour, startMinute, 0, 0);
+  const endsAt = new Date(dayDate);
+  endsAt.setHours(endHour, endMinute, 0, 0);
+
+  if (endsAt < now) return "Passe";
+  if (startsAt <= now && now <= endsAt) return "Maintenant";
+  if (!isSameDay(dayDate, now)) return session.label;
+
+  const minutes = Math.round((startsAt - now) / 60000);
+  if (minutes < 60) return `Dans ${Math.max(1, minutes)} min`;
+  return `A ${timeFormatter.format(startsAt)}`;
+}
+
+function minutesFromTime(value) {
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+function timelineHours() {
+  return Array.from(
+    { length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1 },
+    (_, index) => TIMELINE_START_HOUR + index
+  );
+}
+
+function timelineStyle(session) {
+  const start = minutesFromTime(session.start);
+  const end = minutesFromTime(session.end);
+  const startMinute = TIMELINE_START_HOUR * 60;
+  const endMinute = TIMELINE_END_HOUR * 60;
+  const top = ((Math.max(start, startMinute) - startMinute) / 60) * TIMELINE_PX_PER_HOUR;
+  const height = ((Math.min(end, endMinute) - Math.max(start, startMinute)) / 60) * TIMELINE_PX_PER_HOUR;
+  return `--event-top:${Math.max(0, top)}px;--event-height:${Math.max(34, height)}px;`;
 }
 
 function getStatus(topicId) {
@@ -284,7 +338,9 @@ function accessibleBlocksForDomain(domainId) {
   if (!domain) return [];
 
   const blocks = [];
-  let foundCurrent = false;
+  const current = currentBlockForDomain(domainId);
+  const currentKey = current && !current.complete ? blockKey(current) : null;
+  let currentIndex = -1;
 
   for (const programId of domain.programIds) {
     const program = getProgram(programId);
@@ -295,18 +351,113 @@ function accessibleBlocksForDomain(domainId) {
       if (!topics.length) continue;
 
       const stats = blockStats(topics);
-      blocks.push({ domain, program, block, topics, stats, current: !topics.every(isTopicDone) });
-
-      if (!topics.every(isTopicDone)) {
-        foundCurrent = true;
-        break;
+      const entry = { domain, program, block, topics, stats, current: false, position: "after" };
+      if (currentKey && blockKey(entry) === currentKey) {
+        entry.current = true;
+        currentIndex = blocks.length;
       }
+      blocks.push(entry);
     }
-
-    if (foundCurrent) break;
   }
 
+  blocks.forEach((entry, index) => {
+    if (!currentKey) {
+      entry.position = "before";
+    } else if (index < currentIndex) {
+      entry.position = "before";
+    } else if (index === currentIndex) {
+      entry.position = "current";
+    } else {
+      entry.position = "after";
+    }
+  });
+
   return blocks;
+}
+
+function blockKey(entry) {
+  return `${entry.program.id}::${entry.block.title}`;
+}
+
+function selectedBlockForDomain(domainId, blocks = accessibleBlocksForDomain(domainId)) {
+  const selectedKey = state.selectedBlockByDomain[domainId];
+  const selected = blocks.find((entry) => blockKey(entry) === selectedKey);
+  if (selected) return selected;
+
+  const current = blocks.find((entry) => entry.current);
+  return current || blocks[0] || null;
+}
+
+function selectBlock(domainId, key) {
+  state.selectedBlockByDomain = {
+    ...state.selectedBlockByDomain,
+    [domainId]: key,
+  };
+  const nextSelectedTopics = { ...state.selectedTopicByDomain };
+  delete nextSelectedTopics[domainId];
+  state.selectedTopicByDomain = nextSelectedTopics;
+  saveSettings();
+  render();
+}
+
+function programOptionsForDomain(domainId) {
+  const domain = getDomain(domainId);
+  if (!domain || domain.id !== "maths") return [];
+  return domain.programIds.map(getProgram).filter(Boolean);
+}
+
+function selectedProgramForDomain(domainId) {
+  const options = programOptionsForDomain(domainId);
+  if (!options.length) return null;
+
+  const selectedId = state.selectedProgramByDomain[domainId];
+  const selected = options.find((program) => program.id === selectedId);
+  if (selected) return selected;
+
+  const current = currentBlockForDomain(domainId);
+  if (current && !current.complete) {
+    const currentProgram = options.find((program) => program.id === current.program.id);
+    if (currentProgram) return currentProgram;
+  }
+
+  return options[0];
+}
+
+function visibleBlocksForDomain(domainId, blocks = accessibleBlocksForDomain(domainId)) {
+  const selectedProgram = selectedProgramForDomain(domainId);
+  if (!selectedProgram) return blocks;
+  return blocks.filter((entry) => entry.program.id === selectedProgram.id);
+}
+
+function selectProgram(domainId, programId) {
+  state.selectedProgramByDomain = {
+    ...state.selectedProgramByDomain,
+    [domainId]: programId,
+  };
+
+  const nextSelectedBlocks = { ...state.selectedBlockByDomain };
+  delete nextSelectedBlocks[domainId];
+  state.selectedBlockByDomain = nextSelectedBlocks;
+
+  saveSettings();
+  render();
+}
+
+function selectedTopicForEntry(domainId, entry) {
+  if (!entry?.topics?.length) return null;
+  const selectedId = state.selectedTopicByDomain[domainId];
+  const selected = entry.topics.find((topic) => topic.id === selectedId);
+  if (selected) return selected;
+  return entry.topics.find((topic) => getStatus(topic.id) !== "done") || entry.topics[0];
+}
+
+function selectTopic(domainId, topicId) {
+  state.selectedTopicByDomain = {
+    ...state.selectedTopicByDomain,
+    [domainId]: topicId,
+  };
+  saveSettings();
+  render();
 }
 
 function scheduleForWeek() {
@@ -347,6 +498,7 @@ function initControls() {
     button.addEventListener("click", () => {
       state.view = button.dataset.view;
       render();
+      window.scrollTo({ top: 0, behavior: "auto" });
     });
   });
 
@@ -415,7 +567,10 @@ function renderCalendar() {
   document.getElementById("weekSummary").innerHTML = `
     <button class="week-arrow" type="button" data-week-shift="-1" aria-label="Semaine precedente">‹</button>
     <strong>${escapeHtml(getWeek().label)}</strong>
-    <span>Aujourd'hui ${escapeHtml(todayLabel())} · planning du ${escapeHtml(getWeekRangeLabel())}</span>
+    <span>
+      <b>Aujourd'hui ${escapeHtml(todayLabel())}</b>
+      <small>${escapeHtml(getWeekRangeLabel())}</small>
+    </span>
     <button class="week-arrow" type="button" data-week-shift="1" aria-label="Semaine suivante">›</button>
   `;
   calendar.innerHTML = days.map((day) => renderDayCard(day)).join("");
@@ -437,8 +592,9 @@ function renderCalendar() {
 }
 
 function renderDayCard(day) {
+  const todayClass = isSameDay(day.date, new Date()) ? " today-day" : "";
   return `
-    <section class="day-card accent-${day.domain.accent}">
+    <section class="day-card accent-${day.domain.accent}${todayClass}">
       <div class="day-card-header">
         <span>${escapeHtml(day.label)}</span>
         <div>
@@ -446,8 +602,14 @@ function renderDayCard(day) {
           <small>${escapeHtml(day.dateLabel)} · ${escapeHtml(day.domain.title)}</small>
         </div>
       </div>
-      <div class="day-slots">
-        ${day.sessions.map((session) => renderCourseBlock(day, session)).join("")}
+      <div class="day-timeline" style="--timeline-hours:${TIMELINE_END_HOUR - TIMELINE_START_HOUR};--hour-size:${TIMELINE_PX_PER_HOUR}px;">
+        <div class="time-rail" aria-hidden="true">
+          ${timelineHours().map((hour) => `<span>${String(hour).padStart(2, "0")}h</span>`).join("")}
+        </div>
+        <div class="timeline-area">
+          ${timelineHours().map((hour) => `<i style="--hour-index:${hour - TIMELINE_START_HOUR}"></i>`).join("")}
+          ${day.sessions.map((session) => renderCourseBlock(day, session)).join("")}
+        </div>
       </div>
     </section>
   `;
@@ -462,9 +624,9 @@ function renderCourseBlock(day, session) {
     : `${day.current.program.title} · ${day.current.block.title}`;
 
   return `
-    <button class="course-block accent-${day.domain.accent} status-${status}${selected}" type="button" data-session-id="${session.id}" data-domain-id="${day.domain.id}">
+    <button class="course-block timeline-block accent-${day.domain.accent} status-${status}${selected}" type="button" data-session-id="${session.id}" data-domain-id="${day.domain.id}" style="${timelineStyle(session)}">
       <time>${escapeHtml(session.start)}-${escapeHtml(session.end)}</time>
-      <span>${escapeHtml(day.domain.shortTitle)}</span>
+      <span>${escapeHtml(day.domain.shortTitle)} · ${escapeHtml(sessionTimingLabel(day.date, session))}</span>
       <strong>${escapeHtml(topic?.title || "Termine")}</strong>
       <small>${escapeHtml(currentLabel)}</small>
       <em>${escapeHtml(statusLabels[status] || status)}</em>
@@ -477,15 +639,19 @@ function renderSelectedCourse(days) {
   const selectedDomain = getDomain(state.selectedDomainId) || domains()[0];
   const current = currentBlockForDomain(selectedDomain.id);
   const topic = currentTopicForDomain(selectedDomain.id);
-  const domainDay = days.find((day) => day.domainId === selectedDomain.id);
   const accent = selectedDomain.accent;
 
   if (!topic || current?.complete) {
     detail.innerHTML = `
-      <section class="detail-card">
-        ${renderDomainSelector("calendar")}
-        <h2>${escapeHtml(selectedDomain.title)}</h2>
-        <p>Ce domaine est termine dans les donnees actuelles.</p>
+      <section class="detail-card calendar-title-card">
+        <div class="calendar-selector-head">
+          <span>Domaine</span>
+          ${renderDomainSelector("calendar")}
+        </div>
+        <div class="calendar-topic-strip">
+          <span>Chapitre actuel</span>
+          <strong>Termine</strong>
+        </div>
       </section>
     `;
     attachDomainSelectorHandlers(detail);
@@ -493,20 +659,35 @@ function renderSelectedCourse(days) {
   }
 
   detail.innerHTML = `
-    <section class="detail-card accent-${accent}">
-      ${renderDomainSelector("calendar")}
-      <div class="detail-head">
-        <span>${escapeHtml(domainDay ? `${domainDay.longLabel} ${domainDay.dateLabel}` : "Domaine courant")}</span>
-        <strong>${escapeHtml(selectedDomain.title)}</strong>
+    <section class="detail-card calendar-title-card accent-${accent}">
+      <div class="calendar-selector-head">
+        <span>Domaine</span>
+        ${renderDomainSelector("calendar")}
       </div>
-      <h2>${escapeHtml(topic.title)}</h2>
-      <p>${escapeHtml(current.program.title)} · ${escapeHtml(current.block.title)}</p>
-      <div class="resource-line">${escapeHtml((topic.resources || [])[0] || "Ressource a definir")}</div>
-      ${renderStatusActions(topic)}
+      <div class="calendar-topic-strip">
+        <span>Chapitre actuel</span>
+        <strong>${escapeHtml(topic.title)}</strong>
+      </div>
+      <div class="calendar-status-strip">
+        <span>Etat</span>
+        ${renderStatusActions(topic)}
+      </div>
     </section>
   `;
   attachStatusHandlers(detail);
   attachDomainSelectorHandlers(detail);
+}
+
+function renderBlockMeter(stats) {
+  const total = Math.max(1, stats.total || 1);
+  return `
+    <div class="block-meter" aria-label="${stats.done} chapitre(s) fait(s) sur ${stats.total}">
+      <span>${escapeHtml(String(stats.done))}/${escapeHtml(String(stats.total))}</span>
+      <div>
+        ${Array.from({ length: total }, (_, index) => `<i class="${index < stats.done ? "filled" : ""}"></i>`).join("")}
+      </div>
+    </div>
+  `;
 }
 
 function renderProgress() {
@@ -519,6 +700,8 @@ function renderProgress() {
   `;
   attachStatusHandlers(container);
   attachDomainSelectorHandlers(container);
+  attachProgramSelectorHandlers(container);
+  attachBlockSelectorHandlers(container);
 }
 
 function completedTopics() {
@@ -552,7 +735,7 @@ function renderDomainSelector(context) {
       ${domains()
         .map((domain) => {
           const active = domain.id === state.selectedDomainId ? " active-domain" : "";
-          return `<button class="domain-chip accent-${domain.accent}${active}" type="button" data-domain-id="${domain.id}">${escapeHtml(domain.title)}</button>`;
+          return `<button class="domain-chip accent-${domain.accent}${active}" type="button" data-domain-id="${domain.id}">${escapeHtml(domain.shortTitle || domain.title)}</button>`;
         })
         .join("")}
     </div>
@@ -565,16 +748,74 @@ function attachDomainSelectorHandlers(root = document) {
   });
 }
 
+function renderProgramSelector(domain) {
+  const programs = programOptionsForDomain(domain.id);
+  if (!programs.length) return "";
+
+  const selectedProgram = selectedProgramForDomain(domain.id);
+  return `
+    <div class="program-selector" data-program-selector="${domain.id}">
+      ${programs
+        .map((program) => {
+          const active = selectedProgram?.id === program.id ? " active-program" : "";
+          const shortTitle = program.title.replace(/\s*Mathematiques$/i, "");
+          return `
+            <button class="program-chip${active}" type="button" data-program-domain="${domain.id}" data-program-id="${program.id}">
+              <span>${escapeHtml(shortTitle)}</span>
+            </button>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function attachProgramSelectorHandlers(root = document) {
+  root.querySelectorAll("[data-program-id]").forEach((button) => {
+    button.addEventListener("click", () => selectProgram(button.dataset.programDomain, button.dataset.programId));
+  });
+}
+
+function renderBlockSelector(domain, blocks, selectedEntry) {
+  if (!blocks.length) return "";
+  return `
+    <div class="block-selector" data-block-selector="${domain.id}">
+      ${blocks
+        .map((entry) => {
+          const key = blockKey(entry);
+          const active = selectedEntry && blockKey(selectedEntry) === key ? " active-block" : "";
+          const label = entry.block.title.replace(/^Bloc\s*/i, "B");
+          const marker = entry.position === "current" ? "Courant" : entry.position === "before" ? "Avant" : "Apres";
+          return `
+            <button class="block-chip block-chip-${entry.position}${active}" type="button" data-block-domain="${domain.id}" data-block-key="${escapeHtml(key)}">
+              <span>${escapeHtml(marker)}</span>
+              <strong>${escapeHtml(label)}</strong>
+              <em>${entry.stats.done}/${entry.stats.total}</em>
+            </button>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+function attachBlockSelectorHandlers(root = document) {
+  root.querySelectorAll("[data-block-key]").forEach((button) => {
+    button.addEventListener("click", () => selectBlock(button.dataset.blockDomain, button.dataset.blockKey));
+  });
+}
+
 function renderCompletionStats() {
   const completed = completedTopics();
   const recent = completed.slice(-5).reverse();
+  const completedLabel = `${completed.length} chapitre${completed.length > 1 ? "s" : ""} fini${completed.length > 1 ? "s" : ""}`;
 
   return `
     <section class="stats-card">
       <div class="stats-head">
         <div>
           <span>Stats</span>
-          <h2>${completed.length} chapitres finis</h2>
+          <h2>${completedLabel}</h2>
         </div>
         <strong>${recent[0] ? shortCompletionDate(recent[0].completedAt) : "Aucun"}</strong>
       </div>
@@ -600,9 +841,9 @@ function renderCompletionStats() {
 }
 
 function renderCompletionChart(completed) {
-  const chartWidth = 360;
+  const chartWidth = 340;
   const chartHeight = 230;
-  const padding = { top: 18, right: 18, bottom: 42, left: 42 };
+  const padding = { top: 18, right: 16, bottom: 32, left: 38 };
   const plotWidth = chartWidth - padding.left - padding.right;
   const plotHeight = chartHeight - padding.top - padding.bottom;
   const today = startOfDay(new Date());
@@ -622,7 +863,7 @@ function renderCompletionChart(completed) {
     completedByDay.set(key, rows);
   });
 
-  const series = domainRows.map((domain) => ({ domain, points: [] }));
+  const series = domainRows.map((domain) => ({ domain, points: [], events: [] }));
 
   dates.forEach((date, index) => {
     const key = dateId(date);
@@ -633,6 +874,10 @@ function renderCompletionChart(completed) {
     series.forEach((row) => {
       row.points.push({ date, x, value: countsByDomain.get(row.domain.id) || 0 });
     });
+    (completedByDay.get(key) || []).forEach((topic) => {
+      const row = series.find((entry) => entry.domain.id === topic.domainId);
+      if (row) row.events.push({ topic, date, x });
+    });
   });
 
   const maxY = Math.max(1, ...series.flatMap((row) => row.points.map((point) => point.value)));
@@ -642,21 +887,26 @@ function renderCompletionChart(completed) {
 
   const linePaths = series
     .map((row) => {
-      const path = row.points
-        .map((point, index) => {
-          const y = padding.top + plotHeight - (point.value / maxY) * plotHeight;
-          return `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${y.toFixed(1)}`;
-        })
-        .join(" ");
+      const path = stepPath(row.points, maxY, padding, plotHeight);
+      const areaPath = `${path} L ${padding.left + plotWidth} ${padding.top + plotHeight} L ${padding.left} ${padding.top + plotHeight} Z`;
       const points = row.points
         .filter((point, index, list) => point.value !== (list[index - 1]?.value ?? 0))
         .map((point) => {
           const y = padding.top + plotHeight - (point.value / maxY) * plotHeight;
-          return `<circle class="chart-point accent-${row.domain.accent}" cx="${point.x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5"></circle>`;
+          const topicsForPoint = row.events
+            .filter((event) => isSameDay(event.date, point.date))
+            .map((event) => event.topic.title)
+            .join(", ");
+          return `
+            <circle class="chart-point accent-${row.domain.accent}" cx="${point.x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.6">
+              <title>${escapeHtml(`${row.domain.title} - ${shortCompletionDate(point.date)} : ${topicsForPoint || point.value}`)}</title>
+            </circle>
+          `;
         })
         .join("");
 
       return `
+        <path class="chart-area accent-${row.domain.accent}" d="${areaPath}"></path>
         <path class="chart-line accent-${row.domain.accent}" d="${path}"></path>
         ${points}
       `;
@@ -685,7 +935,6 @@ function renderCompletionChart(completed) {
           })
           .join("")}
         ${linePaths}
-        <text class="axis-title" x="${padding.left + plotWidth / 2}" y="${chartHeight - 2}" text-anchor="middle">date</text>
         <text class="axis-title" transform="translate(12 ${padding.top + plotHeight / 2}) rotate(-90)" text-anchor="middle">chapitres faits</text>
       </svg>
       <div class="chart-legend">
@@ -697,11 +946,25 @@ function renderCompletionChart(completed) {
   `;
 }
 
+function stepPath(points, maxY, padding, plotHeight) {
+  return points
+    .map((point, index, list) => {
+      const y = padding.top + plotHeight - (point.value / maxY) * plotHeight;
+      if (index === 0) return `M ${point.x.toFixed(1)} ${y.toFixed(1)}`;
+      const previous = list[index - 1];
+      const previousY = padding.top + plotHeight - (previous.value / maxY) * plotHeight;
+      return `L ${point.x.toFixed(1)} ${previousY.toFixed(1)} L ${point.x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
 function renderDomainProgress(domain) {
   const current = currentBlockForDomain(domain.id);
   const accessibleBlocks = accessibleBlocksForDomain(domain.id);
+  const visibleBlocks = visibleBlocksForDomain(domain.id, accessibleBlocks);
+  const selectedEntry = selectedBlockForDomain(domain.id, visibleBlocks);
 
-  if ((!current || current.complete) && !accessibleBlocks.length) {
+  if ((!current || current.complete) && !visibleBlocks.length) {
     return `
       <section class="progress-card accent-${domain.accent}">
         <div class="progress-head">
@@ -720,10 +983,10 @@ function renderDomainProgress(domain) {
           <h2>${escapeHtml(domain.title)}</h2>
           <span>100%</span>
         </div>
-        <p>Tout le programme visible est termine. Tu peux quand meme modifier les chapitres ci-dessous.</p>
-        <div class="chapter-list block-history">
-          ${accessibleBlocks.map((entry) => renderBlockProgress(entry)).join("")}
-        </div>
+        <p>Tout le programme visible est termine. Tu peux quand meme revenir sur un bloc.</p>
+        ${renderProgramSelector(domain)}
+        ${renderBlockSelector(domain, visibleBlocks, selectedEntry)}
+        ${selectedEntry ? renderBlockProgress(selectedEntry) : ""}
       </section>
     `;
   }
@@ -734,6 +997,7 @@ function renderDomainProgress(domain) {
         <h2>${escapeHtml(domain.title)}</h2>
         <span>${current.stats.pct}%</span>
       </div>
+      ${renderProgramSelector(domain)}
       <div class="current-block">
         <span>Bloc courant</span>
         <strong>${escapeHtml(current.program.title)}</strong>
@@ -741,19 +1005,19 @@ function renderDomainProgress(domain) {
         <small>${current.stats.done}/${current.stats.total} chapitres faits</small>
       </div>
       <div class="progress-bar"><span style="width:${current.stats.pct}%"></span></div>
-      <div class="chapter-list block-history">
-        ${accessibleBlocks.map((entry) => renderBlockProgress(entry)).join("")}
-      </div>
+      ${renderBlockSelector(domain, visibleBlocks, selectedEntry)}
+      ${selectedEntry ? renderBlockProgress(selectedEntry) : ""}
     </section>
   `;
 }
 
 function renderBlockProgress(entry) {
+  const marker = entry.position === "current" ? "Bloc courant" : entry.position === "before" ? "Bloc precedent" : "Bloc suivant";
   return `
     <section class="block-group${entry.current ? " current-group" : ""}">
       <div class="block-group-head">
         <div>
-          <span>${entry.current ? "Bloc courant" : "Historique"}</span>
+          <span>${escapeHtml(marker)}</span>
           <strong>${escapeHtml(entry.program.title)}</strong>
           <h3>${escapeHtml(entry.block.title)}</h3>
         </div>
@@ -768,9 +1032,9 @@ function renderChapterProgress(topic) {
   const status = getStatus(topic.id);
   return `
     <article class="chapter-row status-${status}">
-      <div>
+      <div class="chapter-row-head">
         <strong>${escapeHtml(topic.title)}</strong>
-        <span>${escapeHtml(statusLabels[status])}</span>
+        <span class="status-pill status-pill-${status}">${escapeHtml(statusLabels[status])}</span>
       </div>
       ${renderStatusActions(topic)}
     </article>
@@ -781,10 +1045,9 @@ function renderStatusActions(topic) {
   return `
     <div class="status-actions" data-topic-id="${topic.id}">
       ${Object.entries(statusLabels)
-        .filter(([key]) => key !== "todo")
         .map(([key, label]) => {
           const active = getStatus(topic.id) === key ? " active-status" : "";
-          return `<button class="status-button${active}" type="button" data-status="${key}">${label}</button>`;
+          return `<button class="status-button status-button-${key}${active}" type="button" data-status="${key}">${label}</button>`;
         })
         .join("")}
     </div>
