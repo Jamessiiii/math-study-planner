@@ -46,6 +46,8 @@ Le projet est un site statique. Une fois pousse dans un depot GitHub :
 4. Ouvrir l'URL GitHub Pages depuis Safari iPhone.
 5. Utiliser `Ajouter a l'ecran d'accueil`.
 
+Note : avec GitHub Free, GitHub Pages est disponible pour les depots publics. Sur le depot prive `Jamessiiii/math-study-planner`, GitHub a refuse l'activation de Pages avec le plan actuel.
+
 ## Donnees
 
 Les donnees sont stockees dans `data.js`.
