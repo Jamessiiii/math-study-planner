@@ -15,6 +15,13 @@ const DAY_DEFS = [
   { id: "sat", label: "Sam", longLabel: "Samedi" },
   { id: "sun", label: "Dim", longLabel: "Dimanche" },
 ];
+const SLOT_PRESETS = [
+  { id: "morning", label: "Matin", start: "09:00", end: "12:30" },
+  { id: "afternoon", label: "Apres-midi", start: "13:30", end: "18:00" },
+  { id: "evening", label: "Soir", start: "18:00", end: "20:00" },
+  { id: "day", label: "Journee", start: "09:00", end: "18:00" },
+  { id: "short", label: "Court", start: "10:00", end: "12:00" },
+];
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
 const rangeFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" });
 const yearFormatter = new Intl.DateTimeFormat("fr-FR", { year: "numeric" });
@@ -167,7 +174,7 @@ function normalizePlanning(raw) {
   const slots = Array.isArray(raw.slots) && raw.slots.length
     ? raw.slots
         .filter((slot) => slot?.start && slot?.end)
-        .slice(0, 5)
+        .slice(0, 8)
         .map((slot, index) => ({
           id: slot.id || `slot-${index + 1}`,
           label: slot.label || `Creneau ${index + 1}`,
@@ -954,18 +961,34 @@ function updatePlanningSlot(slotId, patch) {
   render();
 }
 
-function addPlanningSlot() {
+function getSlotPreset(presetId) {
+  return SLOT_PRESETS.find((preset) => preset.id === presetId) || null;
+}
+
+function addPlanningSlot(presetId = "evening") {
   state.planning = normalizePlanning(state.planning);
+  if (state.planning.slots.length >= 8) return;
+  const preset = getSlotPreset(presetId) || getSlotPreset("evening") || SLOT_PRESETS[0];
   const nextIndex = state.planning.slots.length + 1;
   state.planning.slots.push({
     id: `custom-${Date.now()}`,
-    label: `Creneau ${nextIndex}`,
-    start: "18:00",
-    end: "19:00",
+    label: preset?.label || `Creneau ${nextIndex}`,
+    start: preset?.start || "18:00",
+    end: preset?.end || "19:00",
   });
   state.selectedSessionId = null;
   saveSettings();
   render();
+}
+
+function applyPlanningSlotPreset(slotId, presetId) {
+  const preset = getSlotPreset(presetId);
+  if (!preset) return;
+  updatePlanningSlot(slotId, {
+    label: preset.label,
+    start: preset.start,
+    end: preset.end,
+  });
 }
 
 function removePlanningSlot(slotId) {
@@ -992,6 +1015,7 @@ function renderProgramming() {
   const weekKey = state.selectedProgrammingWeek || "A";
   const week = state.planning.weeks[weekKey] || state.planning.weeks.A;
   const activeDays = week.days.filter((day) => day.enabled !== false).length;
+  const slotsFull = state.planning.slots.length >= 8;
   const domainOptions = domains()
     .map((domain) => `<option value="${domain.id}">${escapeHtml(domain.title)}</option>`)
     .join("");
@@ -1050,19 +1074,37 @@ function renderProgramming() {
           .map(
             (slot) => `
               <article class="slot-editor-row">
-                <input type="text" value="${escapeHtml(slot.label)}" aria-label="Nom du creneau" data-slot-label="${slot.id}">
+                <label class="slot-field slot-name-field">
+                  <span>Nom</span>
+                  <input type="text" value="${escapeHtml(slot.label)}" aria-label="Nom du creneau" data-slot-label="${slot.id}">
+                </label>
                 <div class="slot-times-row">
-                  <input type="time" value="${escapeHtml(slot.start)}" aria-label="Debut" data-slot-start="${slot.id}">
-                  <input type="time" value="${escapeHtml(slot.end)}" aria-label="Fin" data-slot-end="${slot.id}">
-                  <button class="slot-delete-button" type="button" data-slot-delete="${slot.id}" ${state.planning.slots.length <= 1 ? "disabled" : ""}>Supprimer</button>
+                  <label class="slot-field">
+                    <span>Debut</span>
+                    <input type="time" value="${escapeHtml(slot.start)}" aria-label="Debut" data-slot-start="${slot.id}">
+                  </label>
+                  <label class="slot-field">
+                    <span>Fin</span>
+                    <input type="time" value="${escapeHtml(slot.end)}" aria-label="Fin" data-slot-end="${slot.id}">
+                  </label>
                 </div>
+                <label class="slot-field">
+                  <span>Mode rapide</span>
+                  <select data-slot-preset="${slot.id}" aria-label="Mode rapide pour ${escapeHtml(slot.label)}">
+                    <option value="">Choisir un horaire</option>
+                    ${SLOT_PRESETS.map((preset) => `<option value="${preset.id}">${escapeHtml(preset.label)} · ${escapeHtml(preset.start)}-${escapeHtml(preset.end)}</option>`).join("")}
+                  </select>
+                </label>
+                <button class="slot-delete-button" type="button" data-slot-delete="${slot.id}" ${state.planning.slots.length <= 1 ? "disabled" : ""}>Supprimer ce creneau</button>
               </article>
             `
           )
           .join("")}
       </div>
+      <div class="slot-add-grid">
+        ${SLOT_PRESETS.map((preset) => `<button class="slot-add-button" type="button" data-add-slot-preset="${preset.id}" ${slotsFull ? "disabled" : ""}>+ ${escapeHtml(preset.label)}</button>`).join("")}
+      </div>
       <div class="programming-actions">
-        <button class="programming-action-button" type="button" data-add-slot>Ajouter un creneau</button>
         <button class="programming-action-button secondary-action" type="button" data-reset-planning>Defaut</button>
       </div>
     </section>
@@ -1104,7 +1146,16 @@ function attachProgrammingHandlers(root) {
     button.addEventListener("click", () => removePlanningSlot(button.dataset.slotDelete));
   });
 
-  root.querySelector("[data-add-slot]")?.addEventListener("click", addPlanningSlot);
+  root.querySelectorAll("[data-slot-preset]").forEach((select) => {
+    select.addEventListener("change", () => {
+      applyPlanningSlotPreset(select.dataset.slotPreset, select.value);
+    });
+  });
+
+  root.querySelectorAll("[data-add-slot-preset]").forEach((button) => {
+    button.addEventListener("click", () => addPlanningSlot(button.dataset.addSlotPreset));
+  });
+
   root.querySelector("[data-reset-planning]")?.addEventListener("click", resetPlanning);
 }
 

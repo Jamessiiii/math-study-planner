@@ -1451,6 +1451,7 @@ h3 {
 
 .week-editor-tab,
 .programming-action-button,
+.slot-add-button,
 .slot-delete-button {
   border: 0;
   border-radius: 12px;
@@ -1520,6 +1521,7 @@ h3 {
 }
 
 .day-editor-row select,
+.slot-editor-row select,
 .slot-editor-row input {
   width: 100%;
   min-height: 40px;
@@ -1536,8 +1538,24 @@ h3 {
   padding: 0 10px;
 }
 
+.slot-editor-row select {
+  padding: 0 10px;
+}
+
 .slot-editor-row input {
   padding: 0 10px;
+}
+
+.slot-field {
+  display: grid;
+  gap: 6px;
+}
+
+.slot-field span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
 }
 
 .slot-times-row {
@@ -1551,6 +1569,33 @@ h3 {
 }
 
 .slot-times-row .slot-delete-button {
+  grid-column: 1 / -1;
+}
+
+.slot-add-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  padding: 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.slot-add-button {
+  min-height: 42px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--maths) 13%, var(--control));
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.slot-add-button:disabled {
+  opacity: 0.38;
+}
+
+.slot-add-button:last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }
 
@@ -1569,7 +1614,7 @@ h3 {
 
 .programming-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
 
