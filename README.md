@@ -10,7 +10,9 @@ L'app suit automatiquement un cycle Semaine A / Semaine B selon le vrai calendri
 
 Chaque domaine avance lineairement : tous les creneaux d'un domaine pointent vers le meme chapitre courant tant que ce chapitre n'est pas marque `Fait`.
 
-L'onglet `Progres` affiche aussi une synthese des chapitres termines par date a partir du moment ou un chapitre est marque `Fait`.
+L'onglet `Progres` affiche un domaine a la fois et contient un graphique par date avec une courbe pour Maths Sup, Proba et Informatique.
+
+Dans le calendrier, le panneau du bas permet aussi de choisir directement le domaine courant sans devoir appuyer sur une case du planning.
 
 Principe de simplicite : seul le bloc courant d'un domaine est visible. Par exemple, dans Maths Sup, les blocs L1 suivants restent masques tant que le Bloc 0 n'est pas termine.
 

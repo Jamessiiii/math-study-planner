@@ -367,6 +367,38 @@ h3 {
   gap: 7px;
 }
 
+.domain-selector {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.domain-chip {
+  min-height: 38px;
+  padding: 6px 7px;
+  border: 1px solid rgba(21, 23, 21, 0.12);
+  border-radius: 8px;
+  background: var(--paper-strong);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.detail-card .domain-chip {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.domain-chip.active-domain {
+  background: var(--ink);
+  color: white;
+}
+
+.detail-card .domain-chip.active-domain {
+  background: white;
+  color: var(--ink);
+}
+
 .status-button {
   min-height: 34px;
   padding: 6px 5px;
@@ -430,37 +462,77 @@ h3 {
   font-size: 13px;
 }
 
-.mini-chart {
+.completion-chart {
   display: grid;
-  grid-template-columns: repeat(14, minmax(0, 1fr));
-  align-items: end;
-  gap: 4px;
-  min-height: 84px;
-  padding: 10px;
+  gap: 9px;
+  min-width: 0;
+  padding: 8px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
 }
 
-.chart-day {
-  display: grid;
-  align-items: end;
-  gap: 5px;
-  min-width: 0;
-}
-
-.chart-day span {
+.completion-chart svg {
   display: block;
   width: 100%;
-  min-height: 8px;
-  border-radius: 999px 999px 2px 2px;
-  background: white;
+  height: auto;
+  overflow: visible;
 }
 
-.chart-day small {
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 9px;
+.axis-line {
+  stroke: rgba(255, 255, 255, 0.66);
+  stroke-width: 1.4;
+}
+
+.grid-line {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1;
+}
+
+.axis-label,
+.axis-title {
+  fill: rgba(255, 255, 255, 0.62);
+  font-size: 10px;
   font-weight: 850;
-  text-align: center;
+}
+
+.axis-title {
+  fill: rgba(255, 255, 255, 0.78);
+}
+
+.chart-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-point {
+  fill: currentColor;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.chart-legend i {
+  display: block;
+  width: 12px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
 }
 
 .recent-list {
