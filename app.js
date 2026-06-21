@@ -160,8 +160,22 @@ function setStatus(topicId, status) {
   };
 
   if (status === "done") {
-    next.completedAt = previous.completedAt || now;
+    if (previous.status === "done" && previous.completedAt) {
+      next.completedAt = previous.completedAt;
+    } else if (previous.lastCompletedAt) {
+      const changeDate = confirm(
+        "Ce chapitre avait deja une date de validation. Utiliser la date d'aujourd'hui pour le graphique ?\n\nOK : nouvelle date\nAnnuler : garder l'ancienne date"
+      );
+      next.completedAt = changeDate ? now : previous.lastCompletedAt;
+      next.lastCompletedAt = next.completedAt;
+    } else {
+      next.completedAt = now;
+      next.lastCompletedAt = now;
+    }
   } else {
+    if (previous.completedAt) {
+      next.lastCompletedAt = previous.completedAt;
+    }
     delete next.completedAt;
   }
 
@@ -263,6 +277,36 @@ function currentTopicForDomain(domainId) {
   const current = currentBlockForDomain(domainId);
   if (!current || current.complete) return null;
   return current.topics.find((topic) => getStatus(topic.id) !== "done") || null;
+}
+
+function accessibleBlocksForDomain(domainId) {
+  const domain = getDomain(domainId);
+  if (!domain) return [];
+
+  const blocks = [];
+  let foundCurrent = false;
+
+  for (const programId of domain.programIds) {
+    const program = getProgram(programId);
+    if (!program) continue;
+
+    for (const block of program.blocks) {
+      const topics = topicsForProgramBlock(program.id, block.title);
+      if (!topics.length) continue;
+
+      const stats = blockStats(topics);
+      blocks.push({ domain, program, block, topics, stats, current: !topics.every(isTopicDone) });
+
+      if (!topics.every(isTopicDone)) {
+        foundCurrent = true;
+        break;
+      }
+    }
+
+    if (foundCurrent) break;
+  }
+
+  return blocks;
 }
 
 function scheduleForWeek() {
@@ -655,8 +699,9 @@ function renderCompletionChart(completed) {
 
 function renderDomainProgress(domain) {
   const current = currentBlockForDomain(domain.id);
+  const accessibleBlocks = accessibleBlocksForDomain(domain.id);
 
-  if (!current || current.complete) {
+  if ((!current || current.complete) && !accessibleBlocks.length) {
     return `
       <section class="progress-card accent-${domain.accent}">
         <div class="progress-head">
@@ -664,6 +709,21 @@ function renderDomainProgress(domain) {
           <span>100%</span>
         </div>
         <p>Tout le programme visible est termine.</p>
+      </section>
+    `;
+  }
+
+  if (current?.complete) {
+    return `
+      <section class="progress-card accent-${domain.accent}">
+        <div class="progress-head">
+          <h2>${escapeHtml(domain.title)}</h2>
+          <span>100%</span>
+        </div>
+        <p>Tout le programme visible est termine. Tu peux quand meme modifier les chapitres ci-dessous.</p>
+        <div class="chapter-list block-history">
+          ${accessibleBlocks.map((entry) => renderBlockProgress(entry)).join("")}
+        </div>
       </section>
     `;
   }
@@ -681,9 +741,25 @@ function renderDomainProgress(domain) {
         <small>${current.stats.done}/${current.stats.total} chapitres faits</small>
       </div>
       <div class="progress-bar"><span style="width:${current.stats.pct}%"></span></div>
-      <div class="chapter-list">
-        ${current.topics.map((topic) => renderChapterProgress(topic)).join("")}
+      <div class="chapter-list block-history">
+        ${accessibleBlocks.map((entry) => renderBlockProgress(entry)).join("")}
       </div>
+    </section>
+  `;
+}
+
+function renderBlockProgress(entry) {
+  return `
+    <section class="block-group${entry.current ? " current-group" : ""}">
+      <div class="block-group-head">
+        <div>
+          <span>${entry.current ? "Bloc courant" : "Historique"}</span>
+          <strong>${escapeHtml(entry.program.title)}</strong>
+          <h3>${escapeHtml(entry.block.title)}</h3>
+        </div>
+        <em>${entry.stats.done}/${entry.stats.total}</em>
+      </div>
+      ${entry.topics.map((topic) => renderChapterProgress(topic)).join("")}
     </section>
   `;
 }
