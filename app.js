@@ -303,11 +303,13 @@ function initControls() {
   const calendarView = document.getElementById("calendarView");
   let touchStartX = null;
   let touchStartY = null;
+  let touchStartedInCalendar = false;
 
   calendarView.addEventListener("touchstart", (event) => {
     const touch = event.changedTouches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
+    touchStartedInCalendar = Boolean(event.target.closest("#weekCalendar"));
   }, { passive: true });
 
   calendarView.addEventListener("touchend", (event) => {
@@ -317,6 +319,11 @@ function initControls() {
     const dy = touch.clientY - touchStartY;
     touchStartX = null;
     touchStartY = null;
+
+    if (touchStartedInCalendar) {
+      touchStartedInCalendar = false;
+      return;
+    }
 
     if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
     shiftWeek(dx < 0 ? 1 : -1);

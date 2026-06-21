@@ -158,23 +158,39 @@ h3 {
 }
 
 .week-calendar {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  gap: 10px;
+  margin: 0 -12px;
+  padding: 4px 12px 14px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding: 12px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.week-calendar::-webkit-scrollbar {
+  height: 0;
 }
 
 .day-card {
+  flex: 0 0 min(82vw, 320px);
+  scroll-snap-align: start;
   display: grid;
-  grid-template-columns: 66px minmax(0, 1fr);
-  gap: 9px;
-  padding: 10px 0;
-  border-top: 1px solid rgba(21, 23, 21, 0.12);
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+  min-height: 356px;
+  padding: 11px;
+  border: 1px solid rgba(21, 23, 21, 0.12);
+  border-radius: 8px;
+  background: rgba(251, 250, 245, 0.78);
+  box-shadow: var(--shadow);
 }
 
 .day-card-header {
-  display: grid;
-  align-content: start;
-  justify-items: center;
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -192,9 +208,9 @@ h3 {
 
 .day-card-header div {
   display: grid;
-  justify-items: center;
+  justify-items: start;
   gap: 2px;
-  text-align: center;
+  text-align: left;
 }
 
 .day-card-header strong {
@@ -210,6 +226,7 @@ h3 {
 
 .day-slots {
   display: grid;
+  align-content: start;
   gap: 7px;
 }
 
@@ -637,25 +654,17 @@ h3 {
 
 @media (min-width: 760px) {
   .week-calendar {
-    grid-template-columns: 1fr;
-    align-items: start;
+    gap: 12px;
+    margin: 0;
+    padding: 4px 0 14px;
   }
 
   .day-card {
-    grid-template-columns: 96px minmax(0, 1fr);
-    padding: 10px 0;
-    border-top: 1px solid rgba(21, 23, 21, 0.12);
+    flex-basis: 286px;
   }
 
   .day-card-header {
-    grid-template-columns: 42px minmax(0, 1fr);
-    justify-items: start;
     min-height: 52px;
-  }
-
-  .day-card-header div {
-    justify-items: center;
-    text-align: center;
   }
 
   .progress-content {
