@@ -1110,28 +1110,29 @@ function renderProgramming() {
           .map(
             (slot) => `
               <article class="slot-editor-row">
-                <label class="slot-field slot-name-field">
-                  <span>Nom</span>
+                <div class="slot-editor-header">
                   <input type="text" value="${escapeHtml(slot.label)}" aria-label="Nom du creneau" data-slot-label="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}">
-                </label>
-                <div class="slot-times-row">
+                  <button class="slot-delete-icon" type="button" data-slot-delete="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" ${scheduleDay.slots.length <= 1 ? "disabled" : ""} aria-label="Supprimer ce creneau">×</button>
+                </div>
+                <div class="slot-editor-body">
+                  <div class="slot-times-row">
+                    <label class="slot-field">
+                      <span>Debut</span>
+                      <input type="time" value="${escapeHtml(slot.start)}" aria-label="Debut" data-slot-start="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}">
+                    </label>
+                    <label class="slot-field">
+                      <span>Fin</span>
+                      <input type="time" value="${escapeHtml(slot.end)}" aria-label="Fin" data-slot-end="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}">
+                    </label>
+                  </div>
                   <label class="slot-field">
-                    <span>Debut</span>
-                    <input type="time" value="${escapeHtml(slot.start)}" aria-label="Debut" data-slot-start="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}">
-                  </label>
-                  <label class="slot-field">
-                    <span>Fin</span>
-                    <input type="time" value="${escapeHtml(slot.end)}" aria-label="Fin" data-slot-end="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}">
+                    <span>Mode rapide</span>
+                    <select data-slot-preset="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" aria-label="Mode rapide pour ${escapeHtml(slot.label)}">
+                      <option value="">Choisir un horaire</option>
+                      ${SLOT_PRESETS.map((preset) => `<option value="${preset.id}">${escapeHtml(preset.label)} · ${escapeHtml(preset.start)}-${escapeHtml(preset.end)}</option>`).join("")}
+                    </select>
                   </label>
                 </div>
-                <label class="slot-field">
-                  <span>Mode rapide</span>
-                  <select data-slot-preset="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" aria-label="Mode rapide pour ${escapeHtml(slot.label)}">
-                    <option value="">Choisir un horaire</option>
-                    ${SLOT_PRESETS.map((preset) => `<option value="${preset.id}">${escapeHtml(preset.label)} · ${escapeHtml(preset.start)}-${escapeHtml(preset.end)}</option>`).join("")}
-                  </select>
-                </label>
-                <button class="slot-delete-button" type="button" data-slot-delete="${slot.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" ${scheduleDay.slots.length <= 1 ? "disabled" : ""}>Supprimer ce creneau</button>
               </article>
             `
           )

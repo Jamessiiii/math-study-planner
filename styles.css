@@ -1481,11 +1481,20 @@ h3 {
 .day-editor-row,
 .slot-editor-row {
   display: grid;
-  gap: 10px;
-  padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.028);
+}
+
+.day-editor-row {
+  gap: 10px;
+  padding: 12px;
+}
+
+.slot-editor-row {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .day-editor-row {
@@ -1521,6 +1530,7 @@ h3 {
 }
 
 .day-editor-row select,
+.slot-editor-header input,
 .slot-editor-row select,
 .slot-editor-row input {
   width: 100%;
@@ -1546,6 +1556,46 @@ h3 {
   padding: 0 10px;
 }
 
+.slot-editor-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.slot-editor-header input {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  font-size: 14px;
+}
+
+.slot-delete-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 119, 112, 0.11);
+  color: var(--danger);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.slot-delete-icon:disabled {
+  opacity: 0.32;
+}
+
+.slot-editor-body {
+  display: grid;
+  gap: 11px;
+  padding: 12px;
+}
+
 .slot-field {
   display: grid;
   gap: 6px;
@@ -1553,28 +1603,29 @@ h3 {
 
 .slot-field span {
   color: var(--muted);
-  font-size: 10px;
-  font-weight: 950;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .slot-times-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 7px;
+  gap: 11px;
 }
 
 .schedule-day-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 7px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
 }
 
 .schedule-day-tab {
   display: grid;
   gap: 2px;
-  min-height: 48px;
-  padding: 7px 4px;
+  min-height: 46px;
+  padding: 7px 3px;
   border: 1px solid var(--line-soft);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.035);
@@ -1602,6 +1653,9 @@ h3 {
 
 .slot-times-row input[type="time"] {
   min-width: 0;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .slot-times-row .slot-delete-button {
@@ -1885,5 +1939,22 @@ h3 {
     margin: 0 -10px;
     padding: 4px 10px 14px;
     scroll-padding: 10px;
+  }
+}
+
+@media (max-width: 359px) {
+  .schedule-day-tabs {
+    grid-template-columns: repeat(5, minmax(58px, 1fr));
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .schedule-day-tab {
+    scroll-snap-align: start;
+  }
+
+  .slot-times-row {
+    grid-template-columns: 1fr;
   }
 }
