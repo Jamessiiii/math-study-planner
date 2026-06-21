@@ -257,10 +257,13 @@ function renderCalendar() {
 
 function renderDayCard(day) {
   return `
-    <section class="day-card">
+    <section class="day-card accent-${day.domain.accent}">
       <div class="day-card-header">
-        <strong>${escapeHtml(day.longLabel)}</strong>
-        <span>${escapeHtml(day.domain.title)}</span>
+        <span>${escapeHtml(day.label)}</span>
+        <div>
+          <strong>${escapeHtml(day.longLabel)}</strong>
+          <small>${escapeHtml(day.domain.title)}</small>
+        </div>
       </div>
       <div class="day-slots">
         ${day.sessions.map((session) => renderCourseBlock(day, session)).join("")}
@@ -278,7 +281,7 @@ function renderCourseBlock(day, session) {
     : `${day.current.program.title} · ${day.current.block.title}`;
 
   return `
-    <button class="course-block accent-${day.domain.accent}${selected}" type="button" data-session-id="${session.id}">
+    <button class="course-block accent-${day.domain.accent} status-${status}${selected}" type="button" data-session-id="${session.id}">
       <time>${escapeHtml(session.start)}-${escapeHtml(session.end)}</time>
       <span>${escapeHtml(day.domain.shortTitle)}</span>
       <strong>${escapeHtml(topic?.title || "Termine")}</strong>
@@ -362,11 +365,12 @@ function renderDomainProgress(domain) {
 }
 
 function renderChapterProgress(topic) {
+  const status = getStatus(topic.id);
   return `
-    <article class="chapter-row">
+    <article class="chapter-row status-${status}">
       <div>
         <strong>${escapeHtml(topic.title)}</strong>
-        <span>${escapeHtml(statusLabels[getStatus(topic.id)])}</span>
+        <span>${escapeHtml(statusLabels[status])}</span>
       </div>
       ${renderStatusActions(topic)}
     </article>
