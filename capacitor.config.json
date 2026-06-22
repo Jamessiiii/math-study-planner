@@ -1,0 +1,8 @@
+{
+  "appId": "com.janslou.mathstudyplanner",
+  "appName": "Math Study Planner",
+  "webDir": "dist",
+  "server": {
+    "iosScheme": "mathplanner"
+  }
+}

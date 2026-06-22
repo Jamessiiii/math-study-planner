@@ -5,3 +5,8 @@ Sources
 .codex-workspace/
 .codex_tmp/
 .workflow/
+node_modules/
+dist/
+build/
+screenlog.0
+ios/App/Pods/
