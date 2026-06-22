@@ -38,7 +38,7 @@ const state = {
   selectedProgrammingWeek: loadSettings().selectedProgrammingWeek || getCurrentWeekKey(getPlanningWeekStart()),
   selectedScheduleDay: loadSettings().selectedScheduleDay || "mon",
   planning: normalizePlanning(loadSettings().planning),
-  weekOffset: loadSettings().weekOffset || 0,
+  weekOffset: 0,
   progress: loadProgress(),
 };
 
@@ -88,7 +88,6 @@ function saveSettings() {
       selectedProgrammingWeek: state.selectedProgrammingWeek,
       selectedScheduleDay: state.selectedScheduleDay,
       planning: state.planning,
-      weekOffset: state.weekOffset,
     })
   );
 }
@@ -240,13 +239,7 @@ function getWeekStart(date = new Date()) {
 }
 
 function getPlanningWeekStart(date = new Date()) {
-  const today = startOfDay(date);
-  const day = today.getDay();
-  const monday = mondayOfWeek(today);
-
-  if (day === 0) return addDays(monday, 7);
-  if (day === 6) return addDays(monday, 7);
-  return monday;
+  return mondayOfWeek(startOfDay(date));
 }
 
 function getViewedWeekStart() {
@@ -734,6 +727,7 @@ function renderCalendar() {
 
 function renderDayCard(day) {
   const todayClass = isSameDay(day.date, new Date()) ? " today-day" : "";
+  const todayBadge = todayClass ? `<span class="today-badge">Aujourd'hui</span>` : "";
   const bounds = timelineBounds();
   const hours = timelineHours();
   return `
@@ -741,7 +735,7 @@ function renderDayCard(day) {
       <div class="day-card-header">
         <span>${escapeHtml(day.label)}</span>
         <div>
-          <strong>${escapeHtml(day.longLabel)}</strong>
+          <strong>${escapeHtml(day.longLabel)}${todayBadge}</strong>
           <small>${escapeHtml(day.dateLabel)} · ${escapeHtml(day.domain.title)}</small>
         </div>
       </div>
