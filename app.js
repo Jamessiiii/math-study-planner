@@ -752,12 +752,14 @@ function programmingOccurrenceOptions(weekKey) {
       label: firstIsCurrent ? "Actuelle" : "Prochaine",
       start: firstStart,
     },
-    {
-      id: "next",
-      label: firstIsCurrent ? "Prochaine" : "Suivante",
-      start: addDays(firstStart, 14),
-    },
   ];
+  if (firstIsCurrent) {
+    options.push({
+      id: "next",
+      label: "Prochaine",
+      start: addDays(firstStart, 14),
+    });
+  }
   return options;
 }
 
