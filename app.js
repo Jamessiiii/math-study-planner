@@ -492,6 +492,12 @@ function programmingOccurrenceOptions(weekKey) {
   return options;
 }
 
+function weekEditorStatusLabel(weekKey) {
+  if (weekKey === currentRealWeekKey()) return "actuelle";
+  const nextWeekStart = addDays(getPlanningWeekStart(), 7);
+  return isSameDay(nextOccurrenceStartForWeek(weekKey), nextWeekStart) ? "suivante" : "";
+}
+
 function selectedProgrammingOccurrence(weekKey = state.selectedProgrammingWeek || currentRealWeekKey()) {
   const options = programmingOccurrenceOptions(weekKey);
   return options.find((option) => option.id === state.selectedProgrammingOccurrence) || options[0];
@@ -1996,10 +2002,13 @@ function renderProgramming() {
       </div>
       <div class="week-editor-tabs">
         ${["A", "B"]
-          .map((key) => `<button class="week-editor-tab${key === weekKey ? " active-week-editor" : ""}${key === realWeekKey ? " current-week-editor" : ""}" type="button" data-programming-week="${key}">
-            <span>Semaine ${key}</span>
-            ${key === realWeekKey ? "<small>actuelle</small>" : ""}
-          </button>`)
+          .map((key) => {
+            const statusLabel = weekEditorStatusLabel(key);
+            return `<button class="week-editor-tab${key === weekKey ? " active-week-editor" : ""}${key === realWeekKey ? " current-week-editor" : ""}" type="button" data-programming-week="${key}">
+              <span>Semaine ${key}</span>
+              ${statusLabel ? `<small>${escapeHtml(statusLabel)}</small>` : ""}
+            </button>`;
+          })
           .join("")}
       </div>
       <div class="occurrence-editor-tabs" aria-label="Occurrence de semaine a modifier">
@@ -3636,7 +3645,7 @@ function escapeHtml(value) {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js?v=20260622-2").catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=20260622-4").catch(() => {});
   });
 }
 
