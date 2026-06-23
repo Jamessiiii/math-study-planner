@@ -8,15 +8,33 @@ Prototype local de calendrier mobile pour trois domaines independants :
 
 L'app suit automatiquement un cycle Semaine A / Semaine B selon le vrai calendrier et place les cours directement dans le calendrier hebdomadaire. Les jours de la semaine se consultent dans un calendrier horizontal, et la semaine peut etre changee avec les fleches ou par swipe hors de la zone des jours.
 
+Dans `Programmation > Horaires`, chaque jour garde ses horaires de cours pour la matiere attribuee, puis une zone `Sport du jour` permet d'ajouter des horaires de sport independants de la matiere et de la progression des chapitres.
+
 Chaque domaine avance lineairement : tous les creneaux d'un domaine pointent vers le meme chapitre courant tant que ce chapitre n'est pas marque `Fait`.
 
-L'onglet `Progres` affiche un domaine a la fois et contient un graphique par date avec une courbe pour Maths Sup, Proba et Informatique. Les blocs deja debloques restent modifiables, ce qui permet de revenir en arriere sur un chapitre marque `Fait`.
+L'onglet `Progres` affiche une vue simple avec le resume de la semaine, l'action suivante, la tendance sur 30 jours, la regularite et la file `A revoir` quand elle existe. Les analyses secondaires comme la repartition par domaine, le rythme, le fil recent et le graphique sont repliees dans `Details`. Les blocs deja debloques restent modifiables, ce qui permet de revenir en arriere sur un chapitre marque `Fait`.
 
 Quand un chapitre deja valide est repasse en cours ou a revoir puis marque `Fait` a nouveau, l'app demande si la date du graphique doit etre remplacee par la nouvelle date.
+
+Dans le calendrier, le panneau du chapitre courant permet aussi de marquer la seance selectionnee comme travaillee. Cette activite alimente la regularite et le temps travaille sans obliger a terminer un chapitre.
 
 Dans le calendrier, le panneau du bas permet aussi de choisir directement le domaine courant sans devoir appuyer sur une case du planning.
 
 L'interface utilise un theme sombre par defaut.
+
+Chaque chapitre peut recevoir un niveau de maitrise independant de son statut : Non evalue, Lu, Compris, Exercices ou Maitrise (0 a 4), visible dans la liste de chapitres.
+
+La file `A revoir` suit aussi la derniere revision, les echeances derivees de la maitrise, les retards et les revisions notees avec le bouton `Revu`.
+
+Le tableau de bord compare aussi les 30 derniers jours aux 30 jours precedents pour les chapitres finis, le temps travaille et les jours actifs.
+
+Le tableau de bord repartit l'effort recent par domaine sur 14 jours, avec seances, temps travaille et chapitres finis.
+
+Le tableau de bord affiche aussi un fil recent compact des dernieres actions notees.
+
+Le tableau de bord `Progres` affiche maintenant des priorites calculees pour guider les prochaines actions utiles.
+
+La regularite affiche aussi une serie actuelle, une meilleure serie, les jours actifs et la derniere action sur la fenetre de 21 jours.
 
 Principe de simplicite : seul le bloc courant d'un domaine est visible. Par exemple, dans Maths Sup, les blocs L1 suivants restent masques tant que le Bloc 0 n'est pas termine.
 
