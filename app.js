@@ -1678,18 +1678,32 @@ function attachCalendarLongPressHandlers(calendar, days) {
     if (press.timer) clearTimeout(press.timer);
     press.timer = null;
   };
+  const clearTextSelection = () => {
+    const selection = window.getSelection?.();
+    if (selection && selection.rangeCount) selection.removeAllRanges();
+  };
+  const preventNativeLongPressMenu = (target) => {
+    ["contextmenu", "selectstart", "dragstart"].forEach((eventName) => {
+      target.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        clearTextSelection();
+      });
+    });
+  };
 
   calendar.querySelectorAll(".course-block").forEach((button) => {
+    preventNativeLongPressMenu(button);
     const press = { timer: null, x: 0, y: 0 };
     button.addEventListener("pointerdown", (event) => {
       press.x = event.clientX;
       press.y = event.clientY;
       press.timer = setTimeout(() => {
+        clearTextSelection();
         state.calendarLongPressHandled = true;
         const day = days.find((entry) => entry.sessions.some((session) => session.id === button.dataset.sessionId));
         const session = day?.sessions.find((entry) => entry.id === button.dataset.sessionId);
         if (day && session) editCalendarSessionTime(day, session);
-      }, 650);
+      }, 540);
     });
     button.addEventListener("pointermove", (event) => {
       if (Math.abs(event.clientX - press.x) > 8 || Math.abs(event.clientY - press.y) > 8) clearPress(press);
@@ -1700,6 +1714,7 @@ function attachCalendarLongPressHandlers(calendar, days) {
   });
 
   calendar.querySelectorAll("[data-calendar-empty]").forEach((area) => {
+    preventNativeLongPressMenu(area);
     const press = { timer: null, x: 0, y: 0, creating: false, draft: null, day: null, startMinutes: 0, endMinutes: 0 };
     const removeDraft = () => {
       press.draft?.remove();
@@ -1716,6 +1731,7 @@ function attachCalendarLongPressHandlers(calendar, days) {
     };
     const beginDraft = () => {
       if (!press.day || press.creating) return;
+      clearTextSelection();
       press.creating = true;
       state.calendarLongPressHandled = true;
       press.draft = document.createElement("div");
@@ -1735,7 +1751,7 @@ function attachCalendarLongPressHandlers(calendar, days) {
       removeDraft();
       press.timer = setTimeout(() => {
         beginDraft();
-      }, 720);
+      }, 540);
     });
     area.addEventListener("pointermove", (event) => {
       if (press.creating) {
@@ -4674,7 +4690,7 @@ function escapeHtml(value) {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js?v=20260623-14").catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=20260623-15").catch(() => {});
   });
 }
 
