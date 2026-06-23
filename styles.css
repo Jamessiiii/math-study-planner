@@ -757,19 +757,19 @@ h3 {
 }
 
 .resize-start {
-  top: -10px;
+  top: 0;
 }
 
 .resize-start::before {
-  top: 7px;
+  top: -2px;
 }
 
 .resize-end {
-  bottom: -10px;
+  bottom: 0;
 }
 
 .resize-end::before {
-  bottom: 7px;
+  bottom: -2px;
 }
 
 .timeline-block time {

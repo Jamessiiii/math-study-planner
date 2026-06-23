@@ -4690,7 +4690,7 @@ function escapeHtml(value) {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js?v=20260623-15").catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=20260623-16").catch(() => {});
   });
 }
 

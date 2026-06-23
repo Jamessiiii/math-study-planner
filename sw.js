@@ -1,11 +1,11 @@
-const CACHE_NAME = "math-study-planner-v37";
+const CACHE_NAME = "math-study-planner-v38";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=20260623-15",
-  "./data.js?v=20260623-15",
-  "./app.js?v=20260623-15",
-  "./manifest.json?v=20260623-15",
+  "./styles.css?v=20260623-16",
+  "./data.js?v=20260623-16",
+  "./app.js?v=20260623-16",
+  "./manifest.json?v=20260623-16",
   "./icon.svg",
   "./icon-192.png",
   "./icon-512.png",
