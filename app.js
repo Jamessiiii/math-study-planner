@@ -228,8 +228,7 @@ function getProgram(programId) {
 
 function getWeek() {
   const weekStart = getViewedWeekStart();
-  const weekKey = getCurrentWeekKey(weekStart);
-  return state.planning.overrides?.[dateId(weekStart)] || state.planning.weeks[weekKey] || state.planning.weeks.A;
+  return planningWeekForStart(weekStart);
 }
 
 function normalizeTextKey(value) {
@@ -475,20 +474,22 @@ function nextOccurrenceStartForWeek(weekKey, from = getPlanningWeekStart()) {
 
 function programmingOccurrenceOptions(weekKey) {
   const firstStart = nextOccurrenceStartForWeek(weekKey);
-  const secondStart = addDays(firstStart, 14);
   const firstIsCurrent = isSameDay(firstStart, getPlanningWeekStart());
-  return [
+  const options = [
     {
       id: "current",
       label: firstIsCurrent ? "Actuelle" : "Prochaine",
       start: firstStart,
     },
-    {
-      id: "next",
-      label: firstIsCurrent ? "Prochaine" : "Suivante",
-      start: secondStart,
-    },
   ];
+  if (firstIsCurrent) {
+    options.push({
+      id: "next",
+      label: "Prochaine",
+      start: addDays(firstStart, 14),
+    });
+  }
+  return options;
 }
 
 function selectedProgrammingOccurrence(weekKey = state.selectedProgrammingWeek || currentRealWeekKey()) {
@@ -508,12 +509,40 @@ function isCurrentProgrammingOccurrence(weekKey) {
   return isSameDay(programmingWeekStart(weekKey), getPlanningWeekStart());
 }
 
+function planningWeekForStart(weekStart) {
+  state.planning = normalizePlanning(state.planning);
+  const normalizedStart = mondayOfWeek(weekStart);
+  const weekStartKey = dateId(normalizedStart);
+  const weekKey = getCurrentWeekKey(normalizedStart);
+  const overrideWeek = state.planning.overrides?.[weekStartKey];
+  if (overrideWeek) return overrideWeek;
+
+  const currentStart = getPlanningWeekStart();
+  if (normalizedStart <= currentStart) {
+    return state.planning.weeks[weekKey] || state.planning.weeks.A;
+  }
+
+  const previousWeek = planningWeekForStart(addDays(normalizedStart, -14));
+  const weekMeta = state.planning.weeks[weekKey] || state.planning.weeks.A;
+  return {
+    ...clonePlanningWeek(previousWeek),
+    label: weekMeta.label,
+    summary: previousWeek.summary || weekMeta.summary || "",
+    weekKey,
+  };
+}
+
 function ensurePlanningOverride(weekKey, weekStartKey) {
   state.planning = normalizePlanning(state.planning);
   if (!state.planning.overrides) state.planning.overrides = {};
   if (!state.planning.overrides[weekStartKey]) {
+    const weekStart = parseLocalDate(weekStartKey);
+    const inheritedWeek = planningWeekForStart(weekStart);
+    const weekMeta = state.planning.weeks[weekKey] || state.planning.weeks.A;
     state.planning.overrides[weekStartKey] = {
-      ...clonePlanningWeek(state.planning.weeks[weekKey] || state.planning.weeks.A),
+      ...clonePlanningWeek(inheritedWeek),
+      label: weekMeta.label,
+      summary: inheritedWeek.summary || weekMeta.summary || "",
       weekKey,
     };
   }
@@ -523,10 +552,13 @@ function ensurePlanningOverride(weekKey, weekStartKey) {
 function editablePlanningWeek(weekKey) {
   state.planning = normalizePlanning(state.planning);
   const weekStart = programmingWeekStart(weekKey);
+  const weekStartKey = dateId(weekStart);
+  const overrideWeek = state.planning.overrides?.[weekStartKey];
+  if (overrideWeek) return overrideWeek;
   if (isSameDay(weekStart, getPlanningWeekStart())) {
     return state.planning.weeks[weekKey] || state.planning.weeks.A;
   }
-  return ensurePlanningOverride(weekKey, dateId(weekStart));
+  return ensurePlanningOverride(weekKey, weekStartKey);
 }
 
 function getWeekRangeLabel(date = getViewedWeekStart()) {
