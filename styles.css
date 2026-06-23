@@ -1888,6 +1888,113 @@ h3 {
   display: none;
 }
 
+.backup-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(140, 180, 232, 0.24);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(140, 180, 232, 0.12), rgba(255, 255, 255, 0.025)),
+    var(--paper-strong);
+  box-shadow: var(--shadow);
+}
+
+.backup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.backup-head span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.backup-head strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.backup-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.backup-button,
+.backup-restore {
+  min-height: 42px;
+  border: 1px solid rgba(140, 180, 232, 0.28);
+  border-radius: 12px;
+  background: rgba(140, 180, 232, 0.12);
+  color: var(--ink);
+  font-weight: 950;
+}
+
+.backup-button {
+  padding: 0 14px;
+}
+
+.backup-import {
+  background: rgba(229, 173, 82, 0.14);
+  border-color: rgba(229, 173, 82, 0.28);
+}
+
+.backup-file-input {
+  display: none;
+}
+
+.backup-list {
+  display: grid;
+  gap: 8px;
+}
+
+.backup-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.backup-row-main {
+  min-width: 0;
+}
+
+.backup-row-main strong,
+.backup-row-main span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.backup-row-main strong {
+  font-size: 13px;
+}
+
+.backup-row-main span,
+.backup-empty {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.backup-restore {
+  padding: 0 12px;
+}
+
 .programming-card {
   display: grid;
   gap: 13px;
@@ -2881,6 +2988,20 @@ h3 {
 
   .calendar-now-next {
     grid-template-columns: 1fr;
+  }
+
+  .backup-head {
+    display: grid;
+  }
+
+  .backup-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .backup-button,
+  .backup-restore {
+    min-width: 0;
   }
 
   .week-arrow {

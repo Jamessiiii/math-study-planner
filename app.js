@@ -1,5 +1,6 @@
 const STORAGE_KEY = "math-study-planner-state-v3";
 const SETTINGS_KEY = `${STORAGE_KEY}:settings`;
+const BACKUP_KEY = `${STORAGE_KEY}:backups`;
 const WEEK_ANCHOR = "2026-06-15";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MS_PER_WEEK = 7 * MS_PER_DAY;
@@ -8,6 +9,7 @@ const TIMELINE_END_HOUR = 24;
 const TIMELINE_PX_PER_HOUR = 40;
 const MAX_COURSE_SLOTS_PER_DAY = 4;
 const DEFAULT_WEEKLY_GOALS = { chapters: 4, minutes: 600 };
+const AUTO_BACKUP_LIMIT = 10;
 const DAY_DEFS = [
   { id: "mon", label: "Lun", longLabel: "Lundi" },
   { id: "tue", label: "Mar", longLabel: "Mardi" },
@@ -187,6 +189,7 @@ function saveProgress() {
       history: state.history,
     })
   );
+  createAutoBackup("Progression");
 }
 
 function saveSettings() {
@@ -208,6 +211,155 @@ function saveSettings() {
       weeklyGoals: normalizeWeeklyGoals(state.weeklyGoals),
     })
   );
+  createAutoBackup("Planning");
+}
+
+function backupSettingsSnapshot(source = state) {
+  return {
+    selectedDomainId: source.selectedDomainId,
+    selectedBlockByDomain: source.selectedBlockByDomain || {},
+    selectedProgramByDomain: source.selectedProgramByDomain || {},
+    selectedTopicByDomain: source.selectedTopicByDomain || {},
+    selectedProgrammingWeek: source.selectedProgrammingWeek,
+    selectedProgrammingOccurrence: source.selectedProgrammingOccurrence,
+    selectedScheduleDay: source.selectedScheduleDay,
+    programmingSubjectsOpen: source.programmingSubjectsOpen === true,
+    planning: source.planning,
+    weeklyGoals: normalizeWeeklyGoals(source.weeklyGoals),
+  };
+}
+
+function backupStateSnapshot(source = state) {
+  return {
+    progress: source.progress || {},
+    activity: Array.isArray(source.activity) ? source.activity : [],
+    history: Array.isArray(source.history) ? source.history : [],
+  };
+}
+
+function backupMeta(payload) {
+  const progressValues = Object.values(payload.state?.progress || {});
+  const planning = payload.settings?.planning || {};
+  return {
+    progressCount: progressValues.length,
+    doneCount: progressValues.filter((entry) => entry?.status === "done").length,
+    activityCount: Array.isArray(payload.state?.activity) ? payload.state.activity.length : 0,
+    historyCount: Array.isArray(payload.state?.history) ? payload.state.history.length : 0,
+    overrideCount: planning.overrides ? Object.keys(planning.overrides).length : 0,
+  };
+}
+
+function createBackupPayload(reason = "Sauvegarde") {
+  const payload = {
+    schema: "math-study-planner-backup-v1",
+    createdAt: new Date().toISOString(),
+    reason,
+    state: backupStateSnapshot(),
+    settings: backupSettingsSnapshot(),
+  };
+  payload.meta = backupMeta(payload);
+  return payload;
+}
+
+function backupSignature(payload) {
+  return JSON.stringify({
+    state: payload.state,
+    settings: payload.settings,
+  });
+}
+
+function loadAutoBackups() {
+  try {
+    const backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || "[]");
+    if (!Array.isArray(backups)) return [];
+    return backups
+      .filter((entry) => entry?.payload?.schema === "math-study-planner-backup-v1")
+      .slice(0, AUTO_BACKUP_LIMIT);
+  } catch {
+    return [];
+  }
+}
+
+function saveAutoBackups(backups) {
+  localStorage.setItem(BACKUP_KEY, JSON.stringify(backups.slice(0, AUTO_BACKUP_LIMIT)));
+}
+
+function createAutoBackup(reason = "Modification") {
+  try {
+    const payload = createBackupPayload(reason);
+    const signature = backupSignature(payload);
+    const existing = loadAutoBackups();
+    if (existing[0]?.signature === signature) return;
+    const next = [
+      {
+        id: `backup-${Date.now()}`,
+        createdAt: payload.createdAt,
+        reason,
+        signature,
+        meta: payload.meta,
+        payload,
+      },
+      ...existing.filter((entry) => entry.signature !== signature),
+    ];
+    saveAutoBackups(next);
+  } catch {
+    // A failed auto-backup must never block studying actions.
+  }
+}
+
+function backupTitle(entry) {
+  const date = entry?.createdAt ? new Date(entry.createdAt) : null;
+  const dateLabel = date && !Number.isNaN(date.getTime())
+    ? `${rangeFormatter.format(date)} ${timeFormatter.format(date)}`
+    : "Date inconnue";
+  return `${dateLabel} · ${entry?.reason || "Sauvegarde"}`;
+}
+
+function backupSummary(meta = {}) {
+  return `${meta.doneCount || 0} chap. finis · ${meta.activityCount || 0} séances · ${meta.overrideCount || 0} semaines`;
+}
+
+function restoreBackupPayload(payload) {
+  if (!payload || payload.schema !== "math-study-planner-backup-v1") {
+    throw new Error("Format de sauvegarde invalide.");
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.state || {}));
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(payload.settings || {}));
+}
+
+function exportCurrentBackup() {
+  const payload = createBackupPayload("Export manuel");
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `math-study-planner-sauvegarde-${dateId(new Date())}.json`;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+function confirmAndRestorePayload(payload, label = "cette sauvegarde") {
+  const meta = backupMeta(payload);
+  const ok = confirm(`Restaurer ${label} ?\n\n${backupSummary(meta)}\n\nLes données actuelles seront remplacées.`);
+  if (!ok) return;
+  restoreBackupPayload(payload);
+  alert("Sauvegarde restaurée. L'application va se recharger.");
+  window.location.reload();
+}
+
+function parseBackupPayload(raw) {
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    throw new Error("Le fichier n'est pas un JSON valide.");
+  }
+  if (!payload || payload.schema !== "math-study-planner-backup-v1") {
+    throw new Error("Ce fichier n'est pas une sauvegarde Math Planner valide.");
+  }
+  return payload;
 }
 
 function domains() {
@@ -1490,6 +1642,7 @@ function renderProgress() {
     ${renderDashboard()}
     ${renderDomainSelector("progress")}
     ${selectedDomain ? renderDomainProgress(selectedDomain) : ""}
+    ${renderBackupPanel()}
   `;
   attachStatusHandlers(container);
   attachMasteryHandlers(container);
@@ -1498,6 +1651,73 @@ function renderProgress() {
   attachDomainSelectorHandlers(container);
   attachProgramSelectorHandlers(container);
   attachBlockSelectorHandlers(container);
+  attachBackupHandlers(container);
+}
+
+function renderBackupPanel() {
+  const backups = loadAutoBackups();
+  const recent = backups.slice(0, 5);
+  return `
+    <section class="backup-card" aria-label="Sauvegardes">
+      <div class="backup-head">
+        <div>
+          <span>Sauvegardes</span>
+          <strong>${escapeHtml(String(backups.length))} locale${backups.length > 1 ? "s" : ""}</strong>
+        </div>
+        <div class="backup-actions">
+          <button class="backup-button backup-export" type="button" data-backup-export>Exporter</button>
+          <button class="backup-button backup-import" type="button" data-backup-import>Importer</button>
+          <input class="backup-file-input" type="file" accept=".json,application/json" data-backup-file aria-label="Importer une sauvegarde">
+        </div>
+      </div>
+      <div class="backup-list">
+        ${recent.length
+          ? recent.map((entry, index) => `
+              <article class="backup-row">
+                <div class="backup-row-main">
+                  <strong>${escapeHtml(backupTitle(entry))}</strong>
+                  <span>${escapeHtml(backupSummary(entry.meta || entry.payload?.meta || {}))}</span>
+                </div>
+                <button class="backup-restore" type="button" data-backup-restore="${index}">Restaurer</button>
+              </article>
+            `).join("")
+          : `<p class="backup-empty">Les sauvegardes automatiques apparaitront ici apres tes prochaines modifications.</p>`}
+      </div>
+    </section>
+  `;
+}
+
+function attachBackupHandlers(root) {
+  const fileInput = root.querySelector("[data-backup-file]");
+  root.querySelector("[data-backup-export]")?.addEventListener("click", exportCurrentBackup);
+  root.querySelector("[data-backup-import]")?.addEventListener("click", () => fileInput?.click());
+  fileInput?.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      try {
+        const payload = parseBackupPayload(String(reader.result || ""));
+        confirmAndRestorePayload(payload, file.name || "cette sauvegarde");
+      } catch (error) {
+        alert(error.message || "Impossible d'importer cette sauvegarde.");
+      } finally {
+        fileInput.value = "";
+      }
+    });
+    reader.addEventListener("error", () => {
+      alert("Impossible de lire ce fichier.");
+      fileInput.value = "";
+    });
+    reader.readAsText(file);
+  });
+  root.querySelectorAll("[data-backup-restore]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const entry = loadAutoBackups()[Number(button.dataset.backupRestore)];
+      if (!entry?.payload) return;
+      confirmAndRestorePayload(entry.payload, backupTitle(entry));
+    });
+  });
 }
 
 function completedTopics() {
@@ -3647,7 +3867,7 @@ function escapeHtml(value) {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js?v=20260622-4").catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=20260623-1").catch(() => {});
   });
 }
 
