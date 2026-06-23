@@ -1414,8 +1414,8 @@ function renderSelectedCourse(days) {
   const topic = currentTopicForDomain(selectedDomain.id);
   const accent = selectedDomain.accent;
   const actEntry = selectedSession?.topic ? activityForSession(state.selectedSessionId) : null;
-  const canToggleActivity = selectedSession?.topic && selectedDay ? canToggleActivityForDay(selectedDay) : false;
-  const activityTitle = canToggleActivity ? "" : " title=\"Disponible uniquement aujourd'hui\"";
+  const canToggleActivity = selectedSession?.topic && selectedDay ? canToggleActivityForSession(selectedDay, selectedSession, actEntry) : false;
+  const activityTitle = canToggleActivity ? "" : " title=\"Disponible quand la séance est terminée\"";
   const activityBtnHtml = selectedSession?.topic
     ? `<div class="calendar-activity-strip">
         <button class="activity-toggle-btn${actEntry ? " activity-marked" : ""}" type="button" data-activity-toggle${canToggleActivity ? "" : " disabled"}${activityTitle}>
@@ -2326,8 +2326,10 @@ function activityForSession(sessionId) {
   return state.activity.find((e) => e.sessionId === sessionId) || null;
 }
 
-function canToggleActivityForDay(day) {
-  return Boolean(day?.date && isSameDay(day.date, new Date()));
+function canToggleActivityForSession(day, session, existing = null, now = new Date()) {
+  if (!day?.date || !session) return false;
+  if (existing) return true;
+  return sessionDateRange(day, session).endsAt <= now;
 }
 
 function sessionMinutes(session) {
@@ -2344,8 +2346,8 @@ function formatMinutes(totalMinutes) {
 }
 
 function toggleActivity(session, day) {
-  if (!canToggleActivityForDay(day)) return;
   const existing = activityForSession(session.id);
+  if (!canToggleActivityForSession(day, session, existing)) return;
   const topicId = session.topic?.id || "";
   const domainId = day.domain?.id || "";
   const title = session.topic?.title || "Séance travaillée";
