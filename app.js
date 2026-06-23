@@ -58,6 +58,7 @@ const state = {
   selectedHeatmapDate: null,
   calendarInitialFocusDone: false,
   calendarShouldScrollToToday: false,
+  calendarLongPressHandled: false,
 };
 
 const statusLabels = {
@@ -418,6 +419,7 @@ function normalizeSlots(slots, fallbackSlots = []) {
     .slice(0, MAX_COURSE_SLOTS_PER_DAY)
     .map((slot, index) => ({
       id: slot.id || `slot-${index + 1}`,
+      ...(slot.domainId ? { domainId: String(slot.domainId) } : {}),
       label: normalizedCourseSlotLabel(slot, index),
       start: slot.start,
       end: slot.end,
@@ -694,6 +696,14 @@ function parseLocalDate(value) {
   return new Date(year, month - 1, day);
 }
 
+function localDateFromValue(value) {
+  if (value instanceof Date) return startOfDay(value);
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return parseLocalDate(value);
+  }
+  return startOfDay(new Date(value));
+}
+
 function startOfDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -838,6 +848,25 @@ function editablePlanningWeek(weekKey) {
   return ensurePlanningOverride(weekKey, weekStartKey);
 }
 
+function editablePlanningWeekForDate(date) {
+  state.planning = normalizePlanning(state.planning);
+  const weekStart = mondayOfWeek(date);
+  const weekKey = getCurrentWeekKey(weekStart);
+  const weekStartKey = dateId(weekStart);
+  if (state.planning.overrides?.[weekStartKey]) return state.planning.overrides[weekStartKey];
+  if (weekStart < getPlanningWeekStart()) {
+    return planningWeekForStart(weekStart);
+  }
+  if (isSameDay(weekStart, getPlanningWeekStart())) {
+    return state.planning.weeks[weekKey] || state.planning.weeks.A;
+  }
+  return ensurePlanningOverride(weekKey, weekStartKey);
+}
+
+function getPlanningDayForDate(date, dayId) {
+  return editablePlanningWeekForDate(date).days.find((entry) => entry.id === dayId) || null;
+}
+
 function displayPlanningWeek(weekKey) {
   state.planning = normalizePlanning(state.planning);
   const weekStart = programmingWeekStart(weekKey);
@@ -919,6 +948,43 @@ function minutesFromTime(value) {
   return hours * 60 + minutes;
 }
 
+function timeFromMinutes(value) {
+  const minutes = clampNumber(Math.round(value), 0, 24 * 60);
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
+}
+
+function parseTimeRangeInput(value) {
+  const match = String(value || "").trim().match(/^([0-2]?\d):([0-5]\d)\s*[-–]\s*([0-2]?\d):([0-5]\d)$/);
+  if (!match) return null;
+  const start = `${match[1].padStart(2, "0")}:${match[2]}`;
+  const end = `${match[3].padStart(2, "0")}:${match[4]}`;
+  const startMinutes = minutesFromTime(start);
+  const endMinutes = minutesFromTime(end);
+  if (!Number.isFinite(startMinutes) || !Number.isFinite(endMinutes)) return null;
+  if (startMinutes < 0 || endMinutes > 24 * 60 || endMinutes <= startMinutes) return null;
+  return { start, end };
+}
+
+function roundedTimeRangeFromPoint(day, clientY) {
+  const area = document.querySelector(`[data-calendar-day="${day.id}"] .timeline-area`);
+  if (!area) return null;
+  const rect = area.getBoundingClientRect();
+  const bounds = timelineBounds();
+  const rawMinutes = bounds.startHour * 60 + ((clientY - rect.top) / TIMELINE_PX_PER_HOUR) * 60;
+  const startMinutes = clampNumber(Math.round(rawMinutes / 30) * 30, bounds.startHour * 60, (bounds.endHour * 60) - 30);
+  const endMinutes = clampNumber(startMinutes + 120, startMinutes + 30, bounds.endHour * 60);
+  return { start: timeFromMinutes(startMinutes), end: timeFromMinutes(endMinutes) };
+}
+
+function roundedTimelineMinuteFromPoint(area, clientY, step = 15) {
+  const rect = area.getBoundingClientRect();
+  const bounds = timelineBounds();
+  const rawMinutes = bounds.startHour * 60 + ((clientY - rect.top) / TIMELINE_PX_PER_HOUR) * 60;
+  return clampNumber(Math.round(rawMinutes / step) * step, bounds.startHour * 60, bounds.endHour * 60);
+}
+
 function slotTimeRange(slot) {
   const start = minutesFromTime(slot.start || "00:00");
   let end = minutesFromTime(slot.end || "00:00");
@@ -967,9 +1033,10 @@ function timelineStyle(session) {
 
 function sessionDateRange(day, session) {
   const range = slotTimeRange(session);
-  const startsAt = new Date(day.date);
+  const sessionDay = localDateFromValue(day.date);
+  const startsAt = new Date(sessionDay);
   startsAt.setHours(0, range.start, 0, 0);
-  const endsAt = new Date(day.date);
+  const endsAt = new Date(sessionDay);
   endsAt.setHours(0, range.end, 0, 0);
   return { startsAt, endsAt };
 }
@@ -1453,14 +1520,20 @@ function scheduleForWeek() {
     const current = enabled ? currentBlockForDomain(day.domainId) : null;
     const topic = enabled ? currentTopicForDomain(day.domainId) : null;
     const courseSessions = enabled ? slotsForDay(day).map((slot) => {
+      const slotDomain = getDomain(slot.domainId) || domain;
       return {
         ...slot,
+        domainId: slotDomain?.id || day.domainId,
+        domain: slotDomain,
+        current: slotDomain ? currentBlockForDomain(slotDomain.id) : current,
+        topic: slotDomain ? currentTopicForDomain(slotDomain.id) : topic,
+        slotId: slot.id,
         id: `${dateId(dayDate)}-${day.id}-${slot.id}`,
-        topic,
       };
     }) : [];
     const sportSessions = enabled ? sportSlotsForDay(day).map((slot) => ({
       ...slot,
+      slotId: slot.id,
       id: `${dateId(dayDate)}-${day.id}-${slot.id}`,
       type: "sport",
       topic: null,
@@ -1583,6 +1656,10 @@ function renderCalendar() {
 
   calendar.querySelectorAll(".course-block").forEach((button) => {
     button.addEventListener("click", () => {
+      if (state.calendarLongPressHandled) {
+        state.calendarLongPressHandled = false;
+        return;
+      }
       state.selectedSessionId = button.dataset.sessionId;
       state.selectedDomainId = button.dataset.domainId;
       saveSettings();
@@ -1590,7 +1667,165 @@ function renderCalendar() {
     });
   });
 
+  attachCalendarLongPressHandlers(calendar, days);
+  attachCalendarResizeHandlers(calendar, days);
+
   renderSelectedCourse(days);
+}
+
+function attachCalendarLongPressHandlers(calendar, days) {
+  const clearPress = (press) => {
+    if (press.timer) clearTimeout(press.timer);
+    press.timer = null;
+  };
+
+  calendar.querySelectorAll(".course-block").forEach((button) => {
+    const press = { timer: null, x: 0, y: 0 };
+    button.addEventListener("pointerdown", (event) => {
+      press.x = event.clientX;
+      press.y = event.clientY;
+      press.timer = setTimeout(() => {
+        state.calendarLongPressHandled = true;
+        const day = days.find((entry) => entry.sessions.some((session) => session.id === button.dataset.sessionId));
+        const session = day?.sessions.find((entry) => entry.id === button.dataset.sessionId);
+        if (day && session) editCalendarSessionTime(day, session);
+      }, 650);
+    });
+    button.addEventListener("pointermove", (event) => {
+      if (Math.abs(event.clientX - press.x) > 8 || Math.abs(event.clientY - press.y) > 8) clearPress(press);
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
+      button.addEventListener(eventName, () => clearPress(press));
+    });
+  });
+
+  calendar.querySelectorAll("[data-calendar-empty]").forEach((area) => {
+    const press = { timer: null, x: 0, y: 0, creating: false, draft: null, day: null, startMinutes: 0, endMinutes: 0 };
+    const removeDraft = () => {
+      press.draft?.remove();
+      press.draft = null;
+    };
+    const updateDraft = () => {
+      if (!press.draft) return;
+      const start = Math.min(press.startMinutes, press.endMinutes);
+      const end = Math.max(press.startMinutes, press.endMinutes);
+      const safeEnd = Math.max(end, start + 30);
+      const range = { start: timeFromMinutes(start), end: timeFromMinutes(safeEnd) };
+      press.draft.style.cssText = timelineStyle(range);
+      press.draft.querySelector("time").textContent = `${range.start}-${range.end}`;
+    };
+    const beginDraft = () => {
+      if (!press.day || press.creating) return;
+      press.creating = true;
+      state.calendarLongPressHandled = true;
+      press.draft = document.createElement("div");
+      press.draft.className = "calendar-draft-block";
+      press.draft.innerHTML = "<time></time><span>Nouveau cours</span>";
+      area.appendChild(press.draft);
+      updateDraft();
+    };
+    area.addEventListener("pointerdown", (event) => {
+      if (event.target.closest(".course-block")) return;
+      press.x = event.clientX;
+      press.y = event.clientY;
+      press.creating = false;
+      press.day = days.find((entry) => entry.id === area.dataset.calendarEmpty);
+      press.startMinutes = roundedTimelineMinuteFromPoint(area, event.clientY, 30);
+      press.endMinutes = press.startMinutes + 120;
+      removeDraft();
+      press.timer = setTimeout(() => {
+        beginDraft();
+      }, 720);
+    });
+    area.addEventListener("pointermove", (event) => {
+      if (press.creating) {
+        press.endMinutes = roundedTimelineMinuteFromPoint(area, event.clientY, 15);
+        updateDraft();
+        return;
+      }
+      const dx = Math.abs(event.clientX - press.x);
+      const dy = Math.abs(event.clientY - press.y);
+      if (dx > 10 || dy > 10) clearPress(press);
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
+      area.addEventListener(eventName, () => {
+        clearPress(press);
+        if (press.creating && eventName === "pointerup" && press.day) {
+          const start = Math.min(press.startMinutes, press.endMinutes);
+          const end = Math.max(press.startMinutes, press.endMinutes);
+          addCalendarSessionAtPoint(press.day, press.y, {
+            start: timeFromMinutes(start),
+            end: timeFromMinutes(Math.max(end, start + 30)),
+          });
+        }
+        press.creating = false;
+        removeDraft();
+      });
+    });
+  });
+}
+
+function attachCalendarResizeHandlers(calendar, days) {
+  calendar.querySelectorAll("[data-calendar-resize]").forEach((handle) => {
+    handle.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      state.calendarLongPressHandled = true;
+      const sessionId = handle.dataset.sessionId;
+      const edge = handle.dataset.calendarResize;
+      const day = days.find((entry) => entry.sessions.some((session) => session.id === sessionId));
+      const session = day?.sessions.find((entry) => entry.id === sessionId);
+      const block = handle.closest(".course-block");
+      const area = block?.closest(".timeline-area");
+      if (!day || !session || !block || !area) return;
+
+      const range = slotTimeRange(session);
+      const startMinutes = range.start;
+      const endMinutes = range.end;
+      const bounds = timelineBounds();
+      const areaRect = area.getBoundingClientRect();
+      const timeLabel = block.querySelector("time");
+      const originalLabel = timeLabel?.textContent || "";
+      let nextStart = startMinutes;
+      let nextEnd = endMinutes;
+
+      const applyPreview = () => {
+        const start = timeFromMinutes(nextStart);
+        const end = timeFromMinutes(nextEnd);
+        block.style.cssText = `${timelineStyle({ start, end })}`;
+        if (timeLabel) timeLabel.textContent = `${start}-${end}`;
+      };
+
+      const pointerMove = (moveEvent) => {
+        const rawMinutes = bounds.startHour * 60 + ((moveEvent.clientY - areaRect.top) / TIMELINE_PX_PER_HOUR) * 60;
+        const rounded = clampNumber(Math.round(rawMinutes / 15) * 15, bounds.startHour * 60, bounds.endHour * 60);
+        if (edge === "start") {
+          nextStart = clampNumber(rounded, bounds.startHour * 60, endMinutes - 30);
+        } else {
+          nextEnd = clampNumber(rounded, startMinutes + 30, bounds.endHour * 60);
+        }
+        applyPreview();
+      };
+
+      const pointerUp = () => {
+        document.removeEventListener("pointermove", pointerMove);
+        document.removeEventListener("pointerup", pointerUp);
+        document.removeEventListener("pointercancel", pointerUp);
+        block.style.cssText = timelineStyle(session);
+        if (timeLabel) timeLabel.textContent = originalLabel;
+        if (edge === "start" && nextStart !== startMinutes) {
+          resizeCalendarSession(day, session, { start: timeFromMinutes(nextStart) });
+        }
+        if (edge === "end" && nextEnd !== endMinutes) {
+          resizeCalendarSession(day, session, { end: timeFromMinutes(nextEnd) });
+        }
+      };
+
+      document.addEventListener("pointermove", pointerMove);
+      document.addEventListener("pointerup", pointerUp);
+      document.addEventListener("pointercancel", pointerUp);
+    });
+  });
 }
 
 function focusCurrentCalendarDay(days) {
@@ -1617,6 +1852,46 @@ function scrollCalendarToFocusedDay(calendar) {
   });
 }
 
+function editCalendarSessionTime(day, session) {
+  state.selectedSessionId = session.id;
+  state.selectedDomainId = day.domain?.id || state.selectedDomainId;
+  saveSettings();
+  render();
+}
+
+function resizeCalendarSession(day, session, patch) {
+  const candidateRange = parseTimeRangeInput(`${patch.start || session.start}-${patch.end || session.end}`);
+  if (!candidateRange) {
+    alert("Horaire invalide.");
+    render();
+    return;
+  }
+  const normalizedPatch = {
+    ...(patch.start ? { start: candidateRange.start } : {}),
+    ...(patch.end ? { end: candidateRange.end } : {}),
+  };
+  if (session.type === "sport") {
+    updateCalendarSportSlot(day.date, day.id, session.slotId, normalizedPatch);
+    return;
+  }
+  const candidate = { ...session, ...normalizedPatch };
+  updateCalendarCourseSlot(day.date, day.id, day.domain.id, session.slotId, {
+    ...normalizedPatch,
+    ...(normalizedPatch.start ? { label: courseSlotDefaultLabel(candidate) } : {}),
+  });
+}
+
+function addCalendarSessionAtPoint(day, clientY, explicitRange = null) {
+  if (day.enabled === false || !day.domain) {
+    alert("Ce jour est désactivé dans Programme.");
+    return;
+  }
+  const suggested = explicitRange || roundedTimeRangeFromPoint(day, clientY);
+  if (!suggested) return;
+  const selectedDomain = getDomain(state.selectedDomainId) || day.domain;
+  addCalendarCourseSlot(day.date, day.id, selectedDomain.id, suggested);
+}
+
 function renderDayCard(day) {
   const todayClass = isSameDay(day.date, new Date()) ? " today-day" : "";
   const todayBadge = todayClass ? `<span class="today-badge">Aujourd'hui</span>` : "";
@@ -1625,7 +1900,7 @@ function renderDayCard(day) {
   const dayAccent = day.domain?.accent || "neutral";
   const meta = day.domain ? `${day.dateLabel} · ${day.domain.title}` : day.dateLabel;
   return `
-    <section class="day-card accent-${dayAccent}${day.enabled ? "" : " day-card-disabled"}${todayClass}">
+    <section class="day-card accent-${dayAccent}${day.enabled ? "" : " day-card-disabled"}${todayClass}" data-calendar-day="${day.id}">
       <div class="day-card-header">
         <span>${escapeHtml(day.label)}</span>
         <div>
@@ -1637,7 +1912,7 @@ function renderDayCard(day) {
         <div class="time-rail" aria-hidden="true">
           ${hours.map((hour) => `<span>${formatTimelineHour(hour)}</span>`).join("")}
         </div>
-        <div class="timeline-area">
+        <div class="timeline-area" data-calendar-empty="${day.id}">
           ${hours.map((hour) => `<i style="--hour-index:${hour - bounds.startHour}"></i>`).join("")}
           ${day.sessions.length ? day.sessions.map((session) => renderCourseBlock(day, session)).join("") : '<p class="timeline-empty-note">Aucun cours</p>'}
         </div>
@@ -1647,33 +1922,48 @@ function renderDayCard(day) {
 }
 
 function renderCourseBlock(day, session) {
+  const selected = session?.id === state.selectedSessionId ? " selected" : "";
+  const handles = selected ? renderCalendarResizeHandles(day, session) : "";
   if (session?.type === "sport") {
-    const selected = session?.id === state.selectedSessionId ? " selected" : "";
     return `
-      <button class="course-block timeline-block sport-block${selected}" type="button" data-session-id="${session.id}" data-domain-id="${day.domain.id}" style="${timelineStyle(session)}">
+      <button class="course-block timeline-block sport-block${selected}" type="button" data-session-id="${session.id}" data-slot-id="${session.slotId}" data-session-type="sport" data-domain-id="${day.domain.id}" style="${timelineStyle(session)}">
         <time>${escapeHtml(session.start)}-${escapeHtml(session.end)}</time>
         <span>Sport · ${escapeHtml(sessionTimingLabel(day.date, session))}</span>
         <strong>${escapeHtml(session.label || "Sport")}</strong>
         <em>Sport</em>
+        ${handles}
       </button>
     `;
   }
 
   const topic = session?.topic;
-  const selected = session?.id === state.selectedSessionId ? " selected" : "";
   const status = topic ? getStatus(topic.id) : "done";
-  const currentLabel = day.current?.complete
+  const sessionDomain = session.domain || day.domain;
+  const sessionCurrent = session.current || day.current;
+  const currentLabel = sessionCurrent?.complete
     ? "Termine"
-    : `${day.current.program.title} · ${day.current.block.title}`;
+    : `${sessionCurrent.program.title} · ${sessionCurrent.block.title}`;
 
   return `
-    <button class="course-block timeline-block accent-${day.domain.accent} status-${status}${selected}" type="button" data-session-id="${session.id}" data-domain-id="${day.domain.id}" style="${timelineStyle(session)}">
+    <button class="course-block timeline-block accent-${sessionDomain.accent} status-${status}${selected}" type="button" data-session-id="${session.id}" data-slot-id="${session.slotId}" data-session-type="course" data-domain-id="${sessionDomain.id}" style="${timelineStyle(session)}">
       <time>${escapeHtml(session.start)}-${escapeHtml(session.end)}</time>
-      <span>${escapeHtml(day.domain.shortTitle)} · ${escapeHtml(sessionTimingLabel(day.date, session))}</span>
+      <span>${escapeHtml(sessionDomain.shortTitle)} · ${escapeHtml(sessionTimingLabel(day.date, session))}</span>
       <strong>${escapeHtml(topic?.title || "Termine")}</strong>
       <small>${escapeHtml(currentLabel)}</small>
       <em>${escapeHtml(statusLabels[status] || status)}</em>
+      ${handles}
     </button>
+  `;
+}
+
+function renderCalendarResizeHandles(day, session) {
+  const rights = calendarSessionEditRights(day.date, session);
+  if (!rights.canResizeStart && !rights.canResizeEnd) return "";
+  return `
+    <span class="calendar-resize-layer" aria-hidden="true">
+      ${rights.canResizeStart ? `<span class="calendar-resize-handle resize-start" data-calendar-resize="start" data-session-id="${escapeHtml(session.id)}"></span>` : ""}
+      ${rights.canResizeEnd ? `<span class="calendar-resize-handle resize-end" data-calendar-resize="end" data-session-id="${escapeHtml(session.id)}"></span>` : ""}
+    </span>
   `;
 }
 
@@ -1715,14 +2005,16 @@ function renderSelectedCourse(days) {
           <span>Type</span>
           <strong>Sport</strong>
         </div>
+        ${renderCalendarSessionEditor(selectedDay, selectedSession)}
       </section>
     `;
+    attachCalendarSessionEditorHandlers(detail, selectedDay, selectedSession);
     return;
   }
 
-  const selectedDomain = getDomain(state.selectedDomainId) || domains()[0];
-  const current = currentBlockForDomain(selectedDomain.id);
-  const topic = currentTopicForDomain(selectedDomain.id);
+  const selectedDomain = selectedSession?.domain || getDomain(selectedSession?.domainId) || getDomain(state.selectedDomainId) || domains()[0];
+  const current = selectedSession?.current || currentBlockForDomain(selectedDomain.id);
+  const topic = selectedSession?.topic || currentTopicForDomain(selectedDomain.id);
   const accent = selectedDomain.accent;
   const actEntry = selectedSession?.topic ? activityForSession(state.selectedSessionId) : null;
   const canToggleActivity = selectedSession?.topic && selectedDay ? canToggleActivityForSession(selectedDay, selectedSession, actEntry) : false;
@@ -1747,9 +2039,11 @@ function renderSelectedCourse(days) {
           <strong>Termine</strong>
         </div>
         ${activityBtnHtml}
+        ${renderCalendarSessionEditor(selectedDay, selectedSession)}
       </section>
     `;
     attachDomainSelectorHandlers(detail);
+    attachCalendarSessionEditorHandlers(detail, selectedDay, selectedSession);
     if (selectedSession && selectedDay) attachActivityHandlers(detail, selectedSession, selectedDay);
     return;
   }
@@ -1769,11 +2063,80 @@ function renderSelectedCourse(days) {
         ${renderStatusActions(topic)}
       </div>
       ${activityBtnHtml}
+      ${renderCalendarSessionEditor(selectedDay, selectedSession)}
     </section>
   `;
   attachStatusHandlers(detail);
   attachDomainSelectorHandlers(detail);
+  attachCalendarSessionEditorHandlers(detail, selectedDay, selectedSession);
   if (selectedSession && selectedDay) attachActivityHandlers(detail, selectedSession, selectedDay);
+}
+
+function renderCalendarSessionEditor(day, session) {
+  if (!day || !session) return "";
+  const rights = calendarSessionEditRights(day.date, session);
+  const sessionDomainId = session.domainId || day.domain?.id || state.selectedDomainId;
+  const sessionDomain = getDomain(sessionDomainId);
+  const editorAccent = session.type === "sport" ? "sport" : (sessionDomain?.accent || day.domain?.accent || "maths");
+  const domainSelect = session.type === "sport" ? "" : `
+      <div class="calendar-domain-field">
+        <span>Matière</span>
+        <div class="calendar-domain-options">
+          ${domains().map((domain) => `
+            <button class="calendar-domain-option accent-${domain.accent}${domain.id === sessionDomainId ? " active" : ""}" type="button" data-calendar-session-domain-option="${escapeHtml(domain.id)}" ${rights.canDelete ? "" : "disabled"}>
+              ${escapeHtml(domain.shortTitle)}
+            </button>
+          `).join("")}
+        </div>
+      </div>`;
+  return `
+    <div class="calendar-time-editor calendar-editor-${editorAccent}${rights.canDelete ? "" : " calendar-time-editor-locked"}">
+      <div class="calendar-time-summary">
+        <span>Horaire</span>
+        <strong><em>${escapeHtml(session.start)}</em><i>→</i><em>${escapeHtml(session.end)}</em></strong>
+      </div>
+      ${domainSelect}
+      <label class="calendar-time-field">
+        <span>Début</span>
+        <input type="text" inputmode="numeric" pattern="[0-9]{2}:[0-9]{2}" maxlength="5" value="${escapeHtml(session.start)}" data-calendar-session-start ${rights.canResizeStart ? "" : "disabled"}>
+      </label>
+      <label class="calendar-time-field">
+        <span>Fin</span>
+        <input type="text" inputmode="numeric" pattern="[0-9]{2}:[0-9]{2}" maxlength="5" value="${escapeHtml(session.end)}" data-calendar-session-end ${rights.canResizeEnd ? "" : "disabled"}>
+      </label>
+      <button class="calendar-delete-session" type="button" data-calendar-session-delete ${rights.canDelete ? "" : "disabled"}>Supprimer</button>
+    </div>
+  `;
+}
+
+function attachCalendarSessionEditorHandlers(root, day, session) {
+  if (!day || !session) return;
+  const domainButtons = root.querySelectorAll("[data-calendar-session-domain-option]");
+  const startInput = root.querySelector("[data-calendar-session-start]");
+  const endInput = root.querySelector("[data-calendar-session-end]");
+  const deleteButton = root.querySelector("[data-calendar-session-delete]");
+
+  domainButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      updateCalendarCourseDomain(day.date, day.id, session.domainId || day.domain.id, session.slotId, button.dataset.calendarSessionDomainOption);
+    });
+  });
+
+  startInput?.addEventListener("change", () => {
+    resizeCalendarSession(day, session, { start: startInput.value });
+  });
+
+  endInput?.addEventListener("change", () => {
+    resizeCalendarSession(day, session, { end: endInput.value });
+  });
+
+  deleteButton?.addEventListener("click", () => {
+    if (session.type === "sport") {
+      removeCalendarSportSlot(day.date, day.id, session.slotId);
+      return;
+    }
+    removeCalendarCourseSlot(day.date, day.id, day.domain.id, session.slotId);
+  });
 }
 
 function attachActivityHandlers(root, session, day) {
@@ -2095,6 +2458,38 @@ function blockPastPlanningEdit(message, slotId = null) {
   render();
 }
 
+function calendarSlotDateRange(dayDate, slot) {
+  return sessionDateRange({ date: dayDate }, slot);
+}
+
+function calendarSlotLockInfo(dayDate, slot, now = new Date()) {
+  if (dayDate < startOfDay(now)) {
+    return { locked: true, canEditEnd: false, message: "Jour passé : modification verrouillée." };
+  }
+  const { startsAt, endsAt } = calendarSlotDateRange(dayDate, slot);
+  if (endsAt <= now) {
+    return { locked: true, canEditEnd: false, message: "Créneau passé : modification verrouillée." };
+  }
+  if (startsAt <= now && now < endsAt) {
+    return { locked: true, canEditEnd: true, message: "Séance en cours : seule l'heure de fin peut être prolongée." };
+  }
+  return { locked: false, canEditEnd: true, message: "" };
+}
+
+function isFutureCalendarSlot(dayDate, slot, now = new Date()) {
+  return calendarSlotDateRange(dayDate, slot).startsAt > now;
+}
+
+function calendarSessionEditRights(dayDate, slot) {
+  const lockInfo = calendarSlotLockInfo(dayDate, slot);
+  return {
+    canResizeStart: !lockInfo.locked,
+    canResizeEnd: !lockInfo.locked || lockInfo.canEditEnd,
+    canDelete: !lockInfo.locked,
+    message: lockInfo.message,
+  };
+}
+
 function slotsForPlanningDay(day, domainId) {
   if (!day.slotsByDomain) day.slotsByDomain = {};
   if (!day.slotsByDomain[domainId]) {
@@ -2136,6 +2531,155 @@ function updatePlanningSlot(weekKey, dayId, domainId, slotId, patch) {
     return;
   }
   Object.assign(slot, patch);
+  state.selectedSessionId = null;
+  state.scheduleNotice = null;
+  saveSettings();
+  render();
+}
+
+function updateCalendarCourseSlot(dayDate, dayId, domainId, slotId, patch) {
+  const day = getPlanningDayForDate(dayDate, dayId);
+  if (!day) return;
+  const slots = slotsForPlanningDay(day, domainId);
+  const slot = slots.find((entry) => entry.id === slotId);
+  if (!slot) return;
+  const lockInfo = calendarSlotLockInfo(dayDate, slot);
+  const isOnlyEndEdit = Object.keys(patch).length === 1 && Object.prototype.hasOwnProperty.call(patch, "end");
+  if (lockInfo.locked && !(lockInfo.canEditEnd && isOnlyEndEdit)) {
+    alert(lockInfo.message);
+    return;
+  }
+  const candidate = { ...slot, ...patch };
+  if (lockInfo.locked && lockInfo.canEditEnd && isOnlyEndEdit && calendarSlotDateRange(dayDate, candidate).endsAt <= new Date()) {
+    alert("L'heure de fin doit rester dans le futur.");
+    return;
+  }
+  if (!lockInfo.locked && !isFutureCalendarSlot(dayDate, candidate)) {
+    alert("Impossible de placer un cours sur un horaire déjà commencé.");
+    return;
+  }
+  const conflict = slotConflict(slots, candidate, slotId);
+  if (conflict) {
+    alert(`Conflit avec ${conflict.label || "un autre cours"} (${conflict.start}-${conflict.end}).`);
+    return;
+  }
+  Object.assign(slot, patch);
+  state.selectedSessionId = `${dateId(dayDate)}-${dayId}-${slot.id}`;
+  state.scheduleNotice = null;
+  saveSettings();
+  render();
+}
+
+function addCalendarCourseSlot(dayDate, dayId, domainId, range) {
+  const day = getPlanningDayForDate(dayDate, dayId);
+  if (!day || day.enabled === false) return;
+  const storageDomainId = day.domainId || domainId;
+  const slots = slotsForPlanningDay(day, storageDomainId);
+  if (slots.length >= MAX_COURSE_SLOTS_PER_DAY) {
+    alert("Maximum 4 cours pour ce jour.");
+    return;
+  }
+  const candidate = {
+    id: `custom-${Date.now()}`,
+    domainId,
+    label: courseSlotDefaultLabel(range),
+    start: range.start,
+    end: range.end,
+  };
+  if (!isFutureCalendarSlot(dayDate, candidate)) {
+    alert("Impossible d'ajouter un cours sur un horaire déjà commencé.");
+    return;
+  }
+  const conflict = slotConflict(slots, candidate);
+  if (conflict) {
+    alert(`Impossible d'ajouter ce cours : conflit avec ${conflict.label || "un autre cours"} (${conflict.start}-${conflict.end}).`);
+    return;
+  }
+  slots.push(candidate);
+  state.selectedSessionId = `${dateId(dayDate)}-${dayId}-${candidate.id}`;
+  state.scheduleNotice = null;
+  saveSettings();
+  render();
+}
+
+function updateCalendarCourseDomain(dayDate, dayId, currentDomainId, slotId, nextDomainId) {
+  const nextDomain = getDomain(nextDomainId);
+  if (!nextDomain) return;
+  const day = getPlanningDayForDate(dayDate, dayId);
+  if (!day) return;
+  const slots = slotsForPlanningDay(day, day.domainId || currentDomainId);
+  const slot = slots.find((entry) => entry.id === slotId);
+  if (!slot) return;
+  const lockInfo = calendarSlotLockInfo(dayDate, slot);
+  if (lockInfo.locked) {
+    alert(lockInfo.message);
+    return;
+  }
+  slot.domainId = nextDomain.id;
+  state.selectedDomainId = nextDomain.id;
+  state.selectedSessionId = `${dateId(dayDate)}-${dayId}-${slot.id}`;
+  state.scheduleNotice = null;
+  saveSettings();
+  render();
+}
+
+function removeCalendarCourseSlot(dayDate, dayId, domainId, slotId) {
+  const day = getPlanningDayForDate(dayDate, dayId);
+  if (!day) return;
+  const slots = slotsForPlanningDay(day, domainId);
+  const slot = slots.find((entry) => entry.id === slotId);
+  if (!slot) return;
+  const lockInfo = calendarSlotLockInfo(dayDate, slot);
+  if (lockInfo.locked) {
+    alert(lockInfo.message);
+    return;
+  }
+  day.slotsByDomain[domainId] = slots.filter((entry) => entry.id !== slotId);
+  state.selectedSessionId = null;
+  state.scheduleNotice = null;
+  saveSettings();
+  render();
+}
+
+function updateCalendarSportSlot(dayDate, dayId, slotId, patch) {
+  const day = getPlanningDayForDate(dayDate, dayId);
+  if (!day) return;
+  const slot = sportSlotsForPlanningDay(day).find((entry) => entry.id === slotId);
+  if (!slot) return;
+  const lockInfo = calendarSlotLockInfo(dayDate, slot);
+  const isOnlyEndEdit = Object.keys(patch).length === 1 && Object.prototype.hasOwnProperty.call(patch, "end");
+  if (lockInfo.locked && !(lockInfo.canEditEnd && isOnlyEndEdit)) {
+    alert(lockInfo.message);
+    return;
+  }
+  const candidate = { ...slot, ...patch };
+  if (lockInfo.locked && lockInfo.canEditEnd && isOnlyEndEdit && calendarSlotDateRange(dayDate, candidate).endsAt <= new Date()) {
+    alert("L'heure de fin doit rester dans le futur.");
+    return;
+  }
+  if (!lockInfo.locked && !isFutureCalendarSlot(dayDate, candidate)) {
+    alert("Impossible de placer du sport sur un horaire déjà commencé.");
+    return;
+  }
+  Object.assign(slot, patch);
+  state.selectedSessionId = `${dateId(dayDate)}-${dayId}-${slot.id}`;
+  state.scheduleNotice = null;
+  saveSettings();
+  render();
+}
+
+function removeCalendarSportSlot(dayDate, dayId, slotId) {
+  const day = getPlanningDayForDate(dayDate, dayId);
+  if (!day) return;
+  const slots = sportSlotsForPlanningDay(day);
+  const slot = slots.find((entry) => entry.id === slotId);
+  if (!slot) return;
+  const lockInfo = calendarSlotLockInfo(dayDate, slot);
+  if (lockInfo.locked) {
+    alert(lockInfo.message);
+    return;
+  }
+  day.sportSlots = slots.filter((entry) => entry.id !== slotId);
   state.selectedSessionId = null;
   state.scheduleNotice = null;
   saveSettings();
@@ -4130,7 +4674,7 @@ function escapeHtml(value) {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js?v=20260623-3").catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=20260623-14").catch(() => {});
   });
 }
 

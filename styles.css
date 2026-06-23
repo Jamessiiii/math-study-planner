@@ -561,6 +561,7 @@ h3 {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.1);
+  touch-action: auto;
 }
 
 .timeline-area > i {
@@ -603,6 +604,8 @@ h3 {
   text-align: left;
   box-shadow: 0 10px 24px rgba(15, 18, 16, 0.08);
   transition: box-shadow 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .course-block:active {
@@ -714,6 +717,51 @@ h3 {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
+.timeline-block.selected .calendar-resize-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.calendar-resize-handle {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 22px;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: ns-resize;
+}
+
+.calendar-resize-handle::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 42px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+  transform: translateX(-50%);
+}
+
+.resize-start {
+  top: -10px;
+}
+
+.resize-start::before {
+  top: 7px;
+}
+
+.resize-end {
+  bottom: -10px;
+}
+
+.resize-end::before {
+  bottom: 7px;
+}
+
 .timeline-block time {
   grid-column: 1;
   grid-row: 1;
@@ -767,6 +815,39 @@ h3 {
 
 .timeline-block.status-done::after {
   display: none;
+}
+
+.calendar-draft-block {
+  position: absolute;
+  z-index: 5;
+  inset: var(--event-top) 0 auto 0;
+  height: var(--event-height);
+  min-height: 34px;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 9px 11px;
+  border: 1px dashed rgba(255, 255, 255, 0.54);
+  border-left: 4px solid rgba(255, 255, 255, 0.78);
+  background:
+    linear-gradient(90deg, rgba(126, 163, 214, 0.3), rgba(126, 163, 214, 0.12)),
+    rgba(19, 32, 50, 0.92);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 28px rgba(4, 8, 14, 0.18);
+  pointer-events: none;
+}
+
+.calendar-draft-block time {
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.calendar-draft-block span {
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1.1;
+  text-transform: uppercase;
 }
 
 .sport-block {
@@ -904,6 +985,263 @@ h3 {
 
 .calendar-title-card .status-button:active {
   transform: scale(0.96);
+}
+
+.calendar-time-editor {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+  width: 100%;
+  max-width: 100%;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, currentColor 28%, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, currentColor 16%, transparent), transparent 48%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.016)),
+    rgba(255, 255, 255, 0.025);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+}
+
+.calendar-time-editor label,
+.calendar-domain-field {
+  box-sizing: border-box;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.calendar-time-editor span,
+.calendar-domain-field > span {
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.calendar-time-editor input,
+.calendar-delete-session {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.calendar-time-editor input {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 9px;
+  color-scheme: dark;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+}
+
+.calendar-time-editor input:disabled {
+  opacity: 0.42;
+}
+
+.calendar-time-field {
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.035);
+}
+
+.calendar-time-summary {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, currentColor 18%, rgba(255, 255, 255, 0.04)), rgba(255, 255, 255, 0.025));
+}
+
+.calendar-time-summary strong {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.calendar-time-summary em {
+  min-width: 0;
+  color: white;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar-time-summary i {
+  color: currentColor;
+  font-style: normal;
+}
+
+.calendar-editor-maths {
+  color: var(--maths);
+}
+
+.calendar-editor-proba {
+  color: var(--proba);
+}
+
+.calendar-editor-info {
+  color: var(--info);
+}
+
+.calendar-editor-sport {
+  color: #ff6b63;
+}
+
+.calendar-domain-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.calendar-domain-option {
+  min-width: 0;
+  min-height: 36px;
+  padding: 7px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.calendar-domain-option.accent-maths {
+  border-color: color-mix(in srgb, var(--maths) 32%, rgba(255, 255, 255, 0.12));
+  color: color-mix(in srgb, var(--maths) 36%, white);
+}
+
+.calendar-domain-option.accent-proba {
+  border-color: color-mix(in srgb, var(--proba) 32%, rgba(255, 255, 255, 0.12));
+  color: color-mix(in srgb, var(--proba) 36%, white);
+}
+
+.calendar-domain-option.accent-info {
+  border-color: color-mix(in srgb, var(--info) 32%, rgba(255, 255, 255, 0.12));
+  color: color-mix(in srgb, var(--info) 32%, white);
+}
+
+.calendar-domain-option.accent-maths.active {
+  border-color: color-mix(in srgb, var(--maths) 70%, white);
+  background: color-mix(in srgb, var(--maths) 28%, rgba(255, 255, 255, 0.04));
+  color: color-mix(in srgb, var(--maths) 30%, white);
+}
+
+.calendar-domain-option.accent-proba.active {
+  border-color: color-mix(in srgb, var(--proba) 70%, white);
+  background: color-mix(in srgb, var(--proba) 28%, rgba(255, 255, 255, 0.04));
+  color: color-mix(in srgb, var(--proba) 30%, white);
+}
+
+.calendar-domain-option.accent-info.active {
+  border-color: color-mix(in srgb, var(--info) 70%, white);
+  background: color-mix(in srgb, var(--info) 28%, rgba(255, 255, 255, 0.04));
+  color: color-mix(in srgb, var(--info) 22%, white);
+}
+
+.calendar-domain-option:disabled {
+  opacity: 0.42;
+}
+
+.calendar-delete-session {
+  grid-column: 1 / -1;
+  padding: 7px 10px;
+  color: #ff8b84;
+  background: rgba(255, 107, 99, 0.12);
+}
+
+.calendar-delete-session:disabled {
+  color: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.calendar-domain-field {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 620px) {
+  .calendar-time-editor {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    justify-self: center;
+    width: min(100%, calc(100vw - 110px));
+    max-width: min(100%, calc(100vw - 110px));
+    padding: 8px;
+    border-radius: 14px;
+  }
+
+  .calendar-time-editor label,
+  .calendar-domain-field {
+    grid-column: 1;
+  }
+
+  .calendar-time-editor input,
+  .calendar-delete-session {
+    min-height: 36px;
+  }
+
+  .calendar-time-editor input {
+    padding: 8px 7px;
+    font-size: 15px;
+  }
+
+  .calendar-time-field {
+    padding: 7px;
+    border-radius: 10px;
+  }
+
+  .calendar-time-summary {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .calendar-time-summary strong {
+    justify-content: center;
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  .calendar-domain-options {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .calendar-domain-option {
+    min-height: 34px;
+    border-radius: 10px;
+    text-align: center;
+  }
 }
 
 .sport-detail-card {
