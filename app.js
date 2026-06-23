@@ -56,6 +56,8 @@ const state = {
   history: loadHistory(),
   scheduleNotice: null,
   selectedHeatmapDate: null,
+  calendarInitialFocusDone: false,
+  calendarShouldScrollToToday: false,
 };
 
 const statusLabels = {
@@ -1540,6 +1542,8 @@ function renderCalendar() {
   const days = scheduleForWeek();
   const calendar = document.getElementById("weekCalendar");
 
+  focusCurrentCalendarDay(days);
+
   const visibleSessionIds = new Set(days.flatMap((day) => day.sessions.map((session) => session.id)));
   if (!visibleSessionIds.has(state.selectedSessionId)) {
     state.selectedSessionId = days.flatMap((day) => day.sessions)[0]?.id || null;
@@ -1558,6 +1562,7 @@ function renderCalendar() {
   `;
   renderCalendarNowNext(days);
   calendar.innerHTML = days.map((day) => renderDayCard(day)).join("");
+  scrollCalendarToFocusedDay(calendar);
 
   document.querySelectorAll("[data-week-shift]").forEach((button) => {
     button.addEventListener("click", () => shiftWeek(Number(button.dataset.weekShift)));
@@ -1573,6 +1578,30 @@ function renderCalendar() {
   });
 
   renderSelectedCourse(days);
+}
+
+function focusCurrentCalendarDay(days) {
+  if (state.calendarInitialFocusDone || !isSameDay(getViewedWeekStart(), getPlanningWeekStart())) return;
+  state.calendarInitialFocusDone = true;
+  state.calendarShouldScrollToToday = true;
+  const today = days.find((day) => isSameDay(day.date, new Date()));
+  const todaySession = today?.sessions[0];
+  if (todaySession) {
+    state.selectedSessionId = todaySession.id;
+    saveSettings();
+  }
+}
+
+function scrollCalendarToFocusedDay(calendar) {
+  if (!state.calendarShouldScrollToToday || !isSameDay(getViewedWeekStart(), getPlanningWeekStart())) return;
+  state.calendarShouldScrollToToday = false;
+  requestAnimationFrame(() => {
+    calendar.querySelector(".today-day")?.scrollIntoView({
+      behavior: "auto",
+      block: "nearest",
+      inline: "start",
+    });
+  });
 }
 
 function renderDayCard(day) {
@@ -4088,7 +4117,7 @@ function escapeHtml(value) {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js?v=20260623-2").catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=20260623-3").catch(() => {});
   });
 }
 
