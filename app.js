@@ -574,7 +574,7 @@ function createCustomTemplateFromWeek(name, week) {
 
 function saveTemplateFromSelectedWeek() {
   const weekKey = state.selectedProgrammingWeek || "A";
-  const week = editablePlanningWeek(weekKey);
+  const week = displayPlanningWeek(weekKey);
   const defaultName = `${week.label || `Semaine ${weekKey}`} - ${weekRangeShortLabel(programmingWeekStart(weekKey))}`;
   const name = prompt("Nom du modèle", defaultName);
   if (!name || !name.trim()) return;
@@ -595,14 +595,15 @@ function applyTemplateToSelectedWeek(templateId) {
   const template = state.customTemplates.find((entry) => entry.id === templateId);
   if (!template) return;
   const weekKey = state.selectedProgrammingWeek || "A";
-  const week = editablePlanningWeek(weekKey);
-  if (targetWeekHasLockedDays(weekKey, week)) {
+  const displayWeek = displayPlanningWeek(weekKey);
+  if (targetWeekHasLockedDays(weekKey, displayWeek)) {
     alert("Impossible d'appliquer un modèle sur une semaine actuelle qui contient déjà un jour ou un créneau commencé.");
     return;
   }
   const occurrence = selectedProgrammingOccurrence(weekKey);
   const label = `Semaine ${weekKey} · ${weekRangeShortLabel(occurrence.start)}`;
   if (!confirm(`Appliquer "${template.name}" à ${label} ?\n\nLes horaires actuels de cette semaine seront remplacés.`)) return;
+  const week = editablePlanningWeek(weekKey);
   const nextWeek = clonePlanningWeek(template.week);
   week.days = nextWeek.days;
   week.summary = template.name;
@@ -751,14 +752,12 @@ function programmingOccurrenceOptions(weekKey) {
       label: firstIsCurrent ? "Actuelle" : "Prochaine",
       start: firstStart,
     },
-  ];
-  if (firstIsCurrent) {
-    options.push({
+    {
       id: "next",
-      label: "Prochaine",
+      label: firstIsCurrent ? "Prochaine" : "Suivante",
       start: addDays(firstStart, 14),
-    });
-  }
+    },
+  ];
   return options;
 }
 
@@ -835,6 +834,18 @@ function editablePlanningWeek(weekKey) {
     return state.planning.weeks[weekKey] || state.planning.weeks.A;
   }
   return ensurePlanningOverride(weekKey, weekStartKey);
+}
+
+function displayPlanningWeek(weekKey) {
+  state.planning = normalizePlanning(state.planning);
+  const weekStart = programmingWeekStart(weekKey);
+  const weekStartKey = dateId(weekStart);
+  const overrideWeek = state.planning.overrides?.[weekStartKey];
+  if (overrideWeek) return overrideWeek;
+  if (isSameDay(weekStart, getPlanningWeekStart())) {
+    return state.planning.weeks[weekKey] || state.planning.weeks.A;
+  }
+  return planningWeekForStart(weekStart);
 }
 
 function getWeekRangeLabel(date = getViewedWeekStart()) {
@@ -2332,7 +2343,7 @@ function renderProgramming() {
   const realWeekKey = currentRealWeekKey();
   const occurrenceOptions = programmingOccurrenceOptions(weekKey);
   const occurrence = selectedProgrammingOccurrence(weekKey);
-  const week = editablePlanningWeek(weekKey);
+  const week = displayPlanningWeek(weekKey);
   const scheduleDay = week.days.find((day) => day.id === state.selectedScheduleDay) || week.days[0];
   const scheduleDayEnabled = scheduleDay.enabled !== false;
   const scheduleDomain = getDomain(scheduleDay.domainId) || domains()[0];
