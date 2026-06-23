@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-title" content="Math Planner">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Math Study Planner</title>
-    <link rel="manifest" href="manifest.json?v=20260623-1">
-    <link rel="icon" href="icon-192.png?v=20260623-1" type="image/png">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20260623-1">
-    <link rel="stylesheet" href="styles.css?v=20260623-1">
+    <link rel="manifest" href="manifest.json?v=20260623-2">
+    <link rel="icon" href="icon-192.png?v=20260623-2" type="image/png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20260623-2">
+    <link rel="stylesheet" href="styles.css?v=20260623-2">
   </head>
   <body>
     <div class="app-shell">
@@ -41,6 +41,10 @@
         <section id="programmingView" class="view" aria-labelledby="viewTitle">
           <div id="programmingContent" class="programming-content"></div>
         </section>
+
+        <section id="templatesView" class="view" aria-labelledby="viewTitle">
+          <div id="templatesContent" class="templates-content"></div>
+        </section>
       </main>
 
       <nav class="bottom-nav" aria-label="Navigation principale">
@@ -56,10 +60,14 @@
           <span class="nav-icon nav-icon-programming" aria-hidden="true"></span>
           <strong>Programme</strong>
         </button>
+        <button class="nav-button" type="button" data-view="templates">
+          <span class="nav-icon nav-icon-templates" aria-hidden="true"></span>
+          <strong>Modeles</strong>
+        </button>
       </nav>
     </div>
 
-    <script src="data.js?v=20260623-1"></script>
-    <script src="app.js?v=20260623-1"></script>
+    <script src="data.js?v=20260623-2"></script>
+    <script src="app.js?v=20260623-2"></script>
   </body>
 </html>

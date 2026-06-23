@@ -105,7 +105,8 @@ h3 {
 .app-main,
 .view,
 .progress-content,
-.programming-content {
+.programming-content,
+.templates-content {
   display: grid;
   gap: 14px;
 }
@@ -2747,6 +2748,174 @@ h3 {
   color: var(--muted);
 }
 
+.template-apply-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.template-save-current,
+.template-apply-button,
+.template-apply-full,
+.template-delete-button {
+  border: 1px solid rgba(140, 180, 232, 0.28);
+  border-radius: 12px;
+  background: rgba(140, 180, 232, 0.13);
+  color: var(--ink);
+  font-weight: 950;
+}
+
+.template-save-current,
+.template-apply-button {
+  min-height: 48px;
+  padding: 0 12px;
+}
+
+.template-select-field {
+  display: grid;
+  gap: 6px;
+}
+
+.template-select-field span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.template-select-field select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--control);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 900;
+}
+
+.templates-card {
+  display: grid;
+  gap: 14px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper-strong);
+  box-shadow: var(--shadow);
+}
+
+.templates-head,
+.template-card-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.templates-head span,
+.template-card-head span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.templates-head h2,
+.template-card-head strong {
+  display: block;
+  margin-top: 3px;
+}
+
+.template-card-head small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.template-list {
+  display: grid;
+  gap: 10px;
+}
+
+.template-card {
+  display: grid;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid rgba(140, 180, 232, 0.2);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(140, 180, 232, 0.10), rgba(255, 255, 255, 0.025)),
+    rgba(255, 255, 255, 0.025);
+}
+
+.template-delete-button {
+  width: 42px;
+  height: 42px;
+  border-color: rgba(255, 119, 112, 0.26);
+  background: rgba(255, 119, 112, 0.12);
+  color: var(--danger);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.template-domain-row,
+.template-week-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.template-domain-row span,
+.template-week-preview span {
+  display: grid;
+  place-items: center;
+  min-height: 36px;
+  padding: 6px 9px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.045);
+  font-weight: 950;
+}
+
+.template-week-preview span {
+  min-width: 54px;
+}
+
+.template-week-preview small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.template-day-off {
+  color: var(--muted);
+  opacity: 0.58;
+}
+
+.template-apply-full {
+  min-height: 44px;
+  width: 100%;
+}
+
+.templates-empty {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.templates-empty strong {
+  color: var(--ink);
+  font-size: 18px;
+}
+
 .bottom-nav {
   position: fixed;
   z-index: 30;
@@ -2754,7 +2923,7 @@ h3 {
   right: max(12px, env(safe-area-inset-right));
   bottom: max(12px, env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 7px;
   max-width: 430px;
   margin: 0 auto;
@@ -2856,6 +3025,34 @@ h3 {
 
 .nav-icon-programming::after {
   top: 12px;
+}
+
+.nav-icon-templates {
+  border: 2px solid currentColor;
+  border-radius: 4px;
+}
+
+.nav-icon-templates::before,
+.nav-icon-templates::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+
+.nav-icon-templates::before {
+  left: 4px;
+  top: -5px;
+  width: 10px;
+  height: 6px;
+  border-radius: 3px 3px 0 0;
+}
+
+.nav-icon-templates::after {
+  left: 4px;
+  right: 4px;
+  top: 7px;
+  height: 2px;
+  box-shadow: 0 5px 0 currentColor;
 }
 
 .accent-maths {
@@ -3002,6 +3199,15 @@ h3 {
   .backup-button,
   .backup-restore {
     min-width: 0;
+  }
+
+  .template-apply-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .templates-head,
+  .template-card-head {
+    align-items: stretch;
   }
 
   .week-arrow {

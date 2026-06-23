@@ -48,6 +48,7 @@ const state = {
   selectedScheduleDay: loadSettings().selectedScheduleDay || "mon",
   programmingSubjectsOpen: loadSettings().programmingSubjectsOpen === true,
   planning: normalizePlanning(loadSettings().planning),
+  customTemplates: normalizeCustomTemplates(loadSettings().customTemplates),
   weeklyGoals: normalizeWeeklyGoals(loadSettings().weeklyGoals),
   weekOffset: 0,
   progress: loadProgress(),
@@ -77,6 +78,7 @@ const viewTitles = {
   calendar: "Calendrier",
   progress: "Progres",
   programming: "Programmation",
+  templates: "Modeles",
 };
 
 function loadStoredState() {
@@ -208,6 +210,7 @@ function saveSettings() {
       selectedScheduleDay: state.selectedScheduleDay,
       programmingSubjectsOpen: state.programmingSubjectsOpen === true,
       planning: state.planning,
+      customTemplates: state.customTemplates,
       weeklyGoals: normalizeWeeklyGoals(state.weeklyGoals),
     })
   );
@@ -225,6 +228,7 @@ function backupSettingsSnapshot(source = state) {
     selectedScheduleDay: source.selectedScheduleDay,
     programmingSubjectsOpen: source.programmingSubjectsOpen === true,
     planning: source.planning,
+    customTemplates: normalizeCustomTemplates(source.customTemplates),
     weeklyGoals: normalizeWeeklyGoals(source.weeklyGoals),
   };
 }
@@ -502,6 +506,118 @@ function clonePlanningWeek(week) {
       sportSlots: normalizeSportSlots(day.sportSlots),
     })),
   };
+}
+
+function normalizeTemplateWeek(rawWeek) {
+  const base = defaultPlanning().weeks.A;
+  const validDomainIds = new Set(domains().map((domain) => domain.id));
+  const domainIds = domains().map((domain) => domain.id);
+  const fallbackDomain = domains()[0]?.id || "maths";
+  return normalizePlanningWeek("A", rawWeek, base, [], validDomainIds, domainIds, fallbackDomain);
+}
+
+function normalizeCustomTemplates(rawTemplates) {
+  if (!Array.isArray(rawTemplates)) return [];
+  return rawTemplates
+    .map((template) => {
+      if (!template || typeof template !== "object") return null;
+      const name = String(template.name || "").trim();
+      if (!name) return null;
+      const createdAt = template.createdAt && !Number.isNaN(new Date(template.createdAt).getTime())
+        ? template.createdAt
+        : new Date().toISOString();
+      const updatedAt = template.updatedAt && !Number.isNaN(new Date(template.updatedAt).getTime())
+        ? template.updatedAt
+        : createdAt;
+      return {
+        id: template.id ? String(template.id) : `template-${createdAt}`,
+        name,
+        createdAt,
+        updatedAt,
+        week: normalizeTemplateWeek(template.week),
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 30);
+}
+
+function templateStats(template) {
+  const week = template?.week || { days: [] };
+  return (week.days || []).reduce((stats, day) => {
+    if (day.enabled === false) return stats;
+    const domain = getDomain(day.domainId) || domains()[0];
+    return {
+      activeDays: stats.activeDays + 1,
+      courseSlots: stats.courseSlots + slotsForDay(day, domain.id).length,
+      sportSlots: stats.sportSlots + sportSlotsForDay(day).length,
+    };
+  }, { activeDays: 0, courseSlots: 0, sportSlots: 0 });
+}
+
+function templateSummary(template) {
+  const stats = templateStats(template);
+  return `${stats.activeDays}/7 jours · ${stats.courseSlots} cours · ${stats.sportSlots} sport`;
+}
+
+function createCustomTemplateFromWeek(name, week) {
+  const now = new Date().toISOString();
+  return {
+    id: `template-${Date.now()}`,
+    name: name.trim(),
+    createdAt: now,
+    updatedAt: now,
+    week: clonePlanningWeek(week),
+  };
+}
+
+function saveTemplateFromSelectedWeek() {
+  const weekKey = state.selectedProgrammingWeek || "A";
+  const week = editablePlanningWeek(weekKey);
+  const defaultName = `${week.label || `Semaine ${weekKey}`} - ${weekRangeShortLabel(programmingWeekStart(weekKey))}`;
+  const name = prompt("Nom du modèle", defaultName);
+  if (!name || !name.trim()) return;
+  state.customTemplates = normalizeCustomTemplates([
+    createCustomTemplateFromWeek(name, week),
+    ...state.customTemplates,
+  ]);
+  saveSettings();
+  state.view = "templates";
+  render();
+}
+
+function targetWeekHasLockedDays(weekKey, week) {
+  return isCurrentProgrammingWeek(weekKey) && (week.days || []).some((day) => isProgrammingDayAssignmentLocked(weekKey, day));
+}
+
+function applyTemplateToSelectedWeek(templateId) {
+  const template = state.customTemplates.find((entry) => entry.id === templateId);
+  if (!template) return;
+  const weekKey = state.selectedProgrammingWeek || "A";
+  const week = editablePlanningWeek(weekKey);
+  if (targetWeekHasLockedDays(weekKey, week)) {
+    alert("Impossible d'appliquer un modèle sur une semaine actuelle qui contient déjà un jour ou un créneau commencé.");
+    return;
+  }
+  const occurrence = selectedProgrammingOccurrence(weekKey);
+  const label = `Semaine ${weekKey} · ${weekRangeShortLabel(occurrence.start)}`;
+  if (!confirm(`Appliquer "${template.name}" à ${label} ?\n\nLes horaires actuels de cette semaine seront remplacés.`)) return;
+  const nextWeek = clonePlanningWeek(template.week);
+  week.days = nextWeek.days;
+  week.summary = template.name;
+  state.selectedSessionId = null;
+  state.scheduleNotice = null;
+  saveSettings();
+  render();
+}
+
+function deleteCustomTemplate(templateId) {
+  const template = state.customTemplates.find((entry) => entry.id === templateId);
+  if (!template) return;
+  if (!confirm(`Supprimer le modèle "${template.name}" ?`)) return;
+  state.customTemplates = state.customTemplates.filter((entry) => entry.id !== templateId);
+  saveSettings();
+  renderTemplates();
+  renderProgramming();
 }
 
 function normalizePlanningWeek(weekKey, savedWeek, baseWeek, legacySlots, validDomainIds, domainIds, fallbackDomain) {
@@ -1417,6 +1533,7 @@ function render() {
   renderCalendar();
   renderProgress();
   renderProgramming();
+  renderTemplates();
 }
 
 function renderCalendar() {
@@ -2208,6 +2325,9 @@ function renderProgramming() {
   const domainOptions = domains()
     .map((domain) => `<option value="${domain.id}">${escapeHtml(domain.title)}</option>`)
     .join("");
+  const templateOptions = state.customTemplates
+    .map((template) => `<option value="${escapeHtml(template.id)}">${escapeHtml(template.name)} · ${escapeHtml(templateSummary(template))}</option>`)
+    .join("");
 
   container.innerHTML = `
     <section class="programming-card">
@@ -2238,6 +2358,17 @@ function renderProgramming() {
             <small>Semaine ${escapeHtml(weekKey)} · ${escapeHtml(weekRangeShortLabel(option.start))}</small>
           </button>`)
           .join("")}
+      </div>
+      <div class="template-apply-panel">
+        <button class="template-save-current" type="button" data-save-week-template>Enregistrer comme modele</button>
+        <label class="template-select-field">
+          <span>Appliquer un modele</span>
+          <select data-apply-template-select ${state.customTemplates.length ? "" : "disabled"}>
+            <option value="">Choisir un modele</option>
+            ${templateOptions}
+          </select>
+        </label>
+        <button class="template-apply-button" type="button" data-apply-template ${state.customTemplates.length ? "" : "disabled"}>Appliquer</button>
       </div>
     </section>
 
@@ -2453,6 +2584,17 @@ function attachProgrammingHandlers(root) {
     button.addEventListener("click", () => selectScheduleDay(button.dataset.scheduleDay));
   });
 
+  root.querySelector("[data-save-week-template]")?.addEventListener("click", saveTemplateFromSelectedWeek);
+
+  root.querySelector("[data-apply-template]")?.addEventListener("click", () => {
+    const select = root.querySelector("[data-apply-template-select]");
+    if (!select?.value) {
+      alert("Choisis d'abord un modèle.");
+      return;
+    }
+    applyTemplateToSelectedWeek(select.value);
+  });
+
   const subjectsDetails = root.querySelector("[data-programming-subjects]");
   if (subjectsDetails) {
     subjectsDetails.addEventListener("toggle", () => {
@@ -2538,6 +2680,85 @@ function attachProgrammingHandlers(root) {
   });
 
   root.querySelector("[data-reset-planning]")?.addEventListener("click", resetPlanning);
+}
+
+function renderTemplates() {
+  const container = document.getElementById("templatesContent");
+  if (!container) return;
+  const templates = normalizeCustomTemplates(state.customTemplates);
+  state.customTemplates = templates;
+
+  container.innerHTML = `
+    <section class="templates-card">
+      <div class="templates-head">
+        <div>
+          <span>Bibliotheque</span>
+          <h2>${templates.length} modele${templates.length > 1 ? "s" : ""}</h2>
+        </div>
+        <button class="template-save-current" type="button" data-save-week-template>Depuis Programme</button>
+      </div>
+      ${templates.length
+        ? `<div class="template-list">
+            ${templates.map((template) => renderTemplateCard(template)).join("")}
+          </div>`
+        : `<div class="templates-empty">
+            <strong>Aucun modele pour l'instant.</strong>
+            <span>Va dans Programme, règle ta semaine, puis enregistre-la comme modele.</span>
+          </div>`}
+    </section>
+  `;
+  attachTemplateHandlers(container);
+}
+
+function renderTemplateCard(template) {
+  const stats = templateStats(template);
+  const activeDays = (template.week.days || []).filter((day) => day.enabled !== false);
+  const domainCounts = domains().map((domain) => {
+    const count = activeDays.filter((day) => day.domainId === domain.id).length;
+    return { domain, count };
+  }).filter((entry) => entry.count > 0);
+  return `
+    <article class="template-card">
+      <div class="template-card-head">
+        <div>
+          <span>Modele</span>
+          <strong>${escapeHtml(template.name)}</strong>
+          <small>${escapeHtml(templateSummary(template))}</small>
+        </div>
+        <button class="template-delete-button" type="button" data-delete-template="${escapeHtml(template.id)}" aria-label="Supprimer ${escapeHtml(template.name)}">×</button>
+      </div>
+      <div class="template-domain-row">
+        ${domainCounts.length
+          ? domainCounts.map(({ domain, count }) => `<span class="accent-${domain.accent}">${escapeHtml(domain.shortTitle)} ${count}j</span>`).join("")
+          : `<span>Aucun jour actif</span>`}
+      </div>
+      <div class="template-week-preview">
+        ${(template.week.days || []).map((day) => {
+          const domain = getDomain(day.domainId) || domains()[0];
+          const enabled = day.enabled !== false;
+          return `
+            <span class="${enabled ? `accent-${domain.accent}` : "template-day-off"}">
+              <strong>${escapeHtml(day.label)}</strong>
+              <small>${enabled ? escapeHtml(domain.shortTitle) : "Off"}</small>
+            </span>
+          `;
+        }).join("")}
+      </div>
+      <button class="template-apply-full" type="button" data-apply-template-id="${escapeHtml(template.id)}">
+        Appliquer a la semaine selectionnee
+      </button>
+    </article>
+  `;
+}
+
+function attachTemplateHandlers(root) {
+  root.querySelector("[data-save-week-template]")?.addEventListener("click", saveTemplateFromSelectedWeek);
+  root.querySelectorAll("[data-delete-template]").forEach((button) => {
+    button.addEventListener("click", () => deleteCustomTemplate(button.dataset.deleteTemplate));
+  });
+  root.querySelectorAll("[data-apply-template-id]").forEach((button) => {
+    button.addEventListener("click", () => applyTemplateToSelectedWeek(button.dataset.applyTemplateId));
+  });
 }
 
 // Activity helpers.
@@ -3867,7 +4088,7 @@ function escapeHtml(value) {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js?v=20260623-1").catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=20260623-2").catch(() => {});
   });
 }
 
