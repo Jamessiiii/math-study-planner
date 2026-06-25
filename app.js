@@ -1320,6 +1320,11 @@ function topicAiIndex(topic) {
   return match ? Number(match[1]) : null;
 }
 
+function topicL3AnalysisIndex(topic) {
+  const match = /^l3-an-(\d+)$/.exec(topic.id || "");
+  return match ? Number(match[1]) : null;
+}
+
 function topicsInAiRange(topics, start, end) {
   return topics.filter((topic) => {
     const index = topicAiIndex(topic);
@@ -1327,7 +1332,25 @@ function topicsInAiRange(topics, start, end) {
   });
 }
 
+function topicsInL3AnalysisRange(topics, start, end) {
+  return topics.filter((topic) => {
+    const index = topicL3AnalysisIndex(topic);
+    return Number.isFinite(index) && index >= start && index <= end;
+  });
+}
+
 function topicGroupsForBlock(entry, orderedTopics) {
+  if (entry.domain.id === "maths" && entry.block.title === "Analyse L3 - special IA") {
+    return [
+      { id: "topologie-normes", title: "Etape 1 - Topologie, metrique, normes", topics: topicsInL3AnalysisRange(orderedTopics, 1, 6) },
+      { id: "mesure-lebesgue-lp", title: "Etape 2 - Mesure, Lebesgue et espaces Lp", topics: topicsInL3AnalysisRange(orderedTopics, 7, 14) },
+      { id: "analyse-fonctionnelle", title: "Etape 3 - Analyse fonctionnelle", topics: topicsInL3AnalysisRange(orderedTopics, 15, 15) },
+      { id: "analyse-complexe", title: "Etape 4 - Analyse complexe", topics: topicsInL3AnalysisRange(orderedTopics, 16, 16) },
+      { id: "calcul-differentiel", title: "Etape 5 - Calcul differentiel", topics: topicsInL3AnalysisRange(orderedTopics, 17, 17) },
+      { id: "equations-differentielles", title: "Etape 6 - Equations differentielles", topics: topicsInL3AnalysisRange(orderedTopics, 18, 20) },
+    ].filter((group) => group.topics.length);
+  }
+
   if (entry.domain.id !== "proba" || entry.block.title !== "B3 - ML, DL, RL et ML Engineering") {
     return null;
   }
@@ -4690,7 +4713,7 @@ function escapeHtml(value) {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js?v=20260623-16").catch(() => {});
+    navigator.serviceWorker.register("sw.js?v=20260625-2").catch(() => {});
   });
 }
 
