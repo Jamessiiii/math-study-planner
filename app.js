@@ -26,9 +26,10 @@ const SLOT_PRESETS = [
   { id: "short", label: "Court", start: "10:00", end: "12:00" },
 ];
 const SPORT_PRESETS = [
-  { id: "sport-evening", label: "Sport", start: "18:00", end: "19:30" },
-  { id: "sport-morning", label: "Sport matin", start: "07:00", end: "08:00" },
-  { id: "sport-lunch", label: "Sport midi", start: "12:30", end: "13:30" },
+  { id: "sport-evening", activityType: "sport", label: "Sport", start: "18:00", end: "19:30" },
+  { id: "sport-morning", activityType: "sport", label: "Sport matin", start: "07:00", end: "08:00" },
+  { id: "sport-lunch", activityType: "sport", label: "Sport midi", start: "12:30", end: "13:30" },
+  { id: "bike-evening", activityType: "bike", label: "Vélo", start: "18:00", end: "19:00" },
 ];
 const dayFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
 const rangeFormatter = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long" });
@@ -407,6 +408,19 @@ function normalizedCourseSlotLabel(slot, index) {
   return slot?.start && slot?.end ? courseSlotDefaultLabel(slot) : `Creneau ${index + 1}`;
 }
 
+function activityTypeForSlot(slot) {
+  if (slot?.activityType === "bike" || slot?.type === "bike") return "bike";
+  return normalizeTextKey(slot?.label).includes("velo") ? "bike" : "sport";
+}
+
+function activityLabelForSlot(slot) {
+  return activityTypeForSlot(slot) === "bike" ? "Vélo" : "Sport";
+}
+
+function isActivitySlot(slot) {
+  return slot?.type === "sport" || slot?.type === "bike";
+}
+
 function compareSlotsByStart(a, b) {
   return slotTimeRange(a).start - slotTimeRange(b).start;
 }
@@ -414,7 +428,7 @@ function compareSlotsByStart(a, b) {
 function normalizeSlots(slots, fallbackSlots = []) {
   const source = Array.isArray(slots) ? slots : fallbackSlots;
   return source
-    .filter((slot) => slot?.start && slot?.end && slot.type !== "sport")
+    .filter((slot) => slot?.start && slot?.end && !isActivitySlot(slot))
     .sort(compareSlotsByStart)
     .slice(0, MAX_COURSE_SLOTS_PER_DAY)
     .map((slot, index) => ({
@@ -434,7 +448,8 @@ function normalizeSportSlots(slots) {
     .slice(0, 8)
     .map((slot, index) => ({
       id: slot.id || `sport-${index + 1}`,
-      label: slot.label || "Sport",
+      activityType: activityTypeForSlot(slot),
+      label: slot.label || activityLabelForSlot(slot),
       start: slot.start,
       end: slot.end,
     }))
@@ -550,17 +565,23 @@ function templateStats(template) {
   return (week.days || []).reduce((stats, day) => {
     if (day.enabled === false) return stats;
     const domain = getDomain(day.domainId) || domains()[0];
+    const activities = sportSlotsForDay(day);
     return {
       activeDays: stats.activeDays + 1,
       courseSlots: stats.courseSlots + slotsForDay(day, domain.id).length,
-      sportSlots: stats.sportSlots + sportSlotsForDay(day).length,
+      sportSlots: stats.sportSlots + activities.filter((slot) => activityTypeForSlot(slot) === "sport").length,
+      bikeSlots: stats.bikeSlots + activities.filter((slot) => activityTypeForSlot(slot) === "bike").length,
     };
-  }, { activeDays: 0, courseSlots: 0, sportSlots: 0 });
+  }, { activeDays: 0, courseSlots: 0, sportSlots: 0, bikeSlots: 0 });
 }
 
 function templateSummary(template) {
   const stats = templateStats(template);
-  return `${stats.activeDays}/7 jours · ${stats.courseSlots} cours · ${stats.sportSlots} sport`;
+  const activities = [
+    stats.sportSlots ? `${stats.sportSlots} sport` : "",
+    stats.bikeSlots ? `${stats.bikeSlots} vélo` : "",
+  ].filter(Boolean).join(" · ") || "0 activité";
+  return `${stats.activeDays}/7 jours · ${stats.courseSlots} cours · ${activities}`;
 }
 
 function createCustomTemplateFromWeek(name, week) {
@@ -638,10 +659,10 @@ function normalizePlanningWeek(weekKey, savedWeek, baseWeek, legacySlots, validD
       const savedSlotsByDomain = savedDay?.slotsByDomain || {};
       const migratedSportSlots = [
         ...(Array.isArray(savedDay?.sportSlots) ? savedDay.sportSlots : []),
-        ...(Array.isArray(savedDay?.slots) ? savedDay.slots.filter((slot) => slot?.type === "sport") : []),
+        ...(Array.isArray(savedDay?.slots) ? savedDay.slots.filter(isActivitySlot) : []),
         ...Object.values(savedSlotsByDomain)
           .filter(Array.isArray)
-          .flatMap((slots) => slots.filter((slot) => slot?.type === "sport")),
+          .flatMap((slots) => slots.filter(isActivitySlot)),
       ];
       const slotsByDomain = Object.fromEntries(
         domainIds.map((currentDomainId) => {
@@ -1057,7 +1078,7 @@ function calendarSessionTimeline(days, now = new Date()) {
 
 function calendarSessionTitle(entry) {
   if (!entry) return "";
-  if (entry.session.type === "sport") return entry.session.label || "Sport";
+  if (entry.session.type === "sport") return entry.session.label || activityLabelForSlot(entry.session);
   return entry.session.topic?.title || "Programme terminé";
 }
 
@@ -1070,7 +1091,9 @@ function calendarSessionMeta(entry, mode) {
 }
 
 function renderCalendarNowNextCard(entry, kind) {
-  const accentClass = entry?.session.type === "sport" ? "sport-card" : `accent-${entry?.day.domain?.accent || "neutral"}`;
+  const accentClass = entry?.session.type === "sport"
+    ? activityTypeForSlot(entry.session) === "bike" ? "bike-card" : "sport-card"
+    : `accent-${entry?.day.domain?.accent || "neutral"}`;
   if (!entry) {
     const emptyText = kind === "current" ? "Aucune séance en cours" : "Aucune séance à venir";
     const hint = kind === "current" ? "Maintenant" : "Cette semaine";
@@ -1083,7 +1106,7 @@ function renderCalendarNowNextCard(entry, kind) {
     `;
   }
 
-  const subject = entry.session.type === "sport" ? "Sport" : entry.day.domain?.shortTitle || "Cours";
+  const subject = entry.session.type === "sport" ? activityLabelForSlot(entry.session) : entry.day.domain?.shortTitle || "Cours";
   return `
     <article class="calendar-now-card ${accentClass}">
       <span>${kind === "current" ? "En cours" : "Prochain"}</span>
@@ -1964,12 +1987,18 @@ function renderCourseBlock(day, session) {
   const selected = session?.id === state.selectedSessionId ? " selected" : "";
   const handles = selected ? renderCalendarResizeHandles(day, session) : "";
   if (session?.type === "sport") {
+    const activityLabel = activityLabelForSlot(session);
+    const activityClass = activityTypeForSlot(session) === "bike" ? " bike-block" : "";
+    const timingLabel = sessionTimingLabel(day.date, session);
+    const activityMeta = normalizeTextKey(timingLabel) === normalizeTextKey(activityLabel)
+      ? activityLabel
+      : `${activityLabel} · ${timingLabel}`;
     return `
-      <button class="course-block timeline-block sport-block${selected}" type="button" data-session-id="${session.id}" data-slot-id="${session.slotId}" data-session-type="sport" data-domain-id="${day.domain.id}" style="${timelineStyle(session)}">
+      <button class="course-block timeline-block sport-block${activityClass}${selected}" type="button" data-session-id="${session.id}" data-slot-id="${session.slotId}" data-session-type="sport" data-domain-id="${day.domain.id}" style="${timelineStyle(session)}">
         <time>${escapeHtml(session.start)}-${escapeHtml(session.end)}</time>
-        <span>Sport · ${escapeHtml(sessionTimingLabel(day.date, session))}</span>
-        <strong>${escapeHtml(session.label || "Sport")}</strong>
-        <em>Sport</em>
+        <span>${escapeHtml(activityMeta)}</span>
+        <strong>${escapeHtml(session.label || activityLabel)}</strong>
+        <em>${escapeHtml(activityLabel)}</em>
         ${handles}
       </button>
     `;
@@ -2030,11 +2059,13 @@ function renderSelectedCourse(days) {
   }
 
   if (selectedSession?.type === "sport") {
+    const activityLabel = activityLabelForSlot(selectedSession);
+    const activityClass = activityTypeForSlot(selectedSession) === "bike" ? " bike-detail-card" : "";
     detail.innerHTML = `
-      <section class="detail-card calendar-title-card sport-detail-card">
+      <section class="detail-card calendar-title-card sport-detail-card${activityClass}">
         <div class="calendar-topic-strip">
           <span>Planning</span>
-          <strong>${escapeHtml(selectedSession.label || "Sport")}</strong>
+          <strong>${escapeHtml(selectedSession.label || activityLabel)}</strong>
         </div>
         <div class="calendar-topic-strip">
           <span>Horaire</span>
@@ -2042,7 +2073,7 @@ function renderSelectedCourse(days) {
         </div>
         <div class="calendar-topic-strip">
           <span>Type</span>
-          <strong>Sport</strong>
+          <strong>${escapeHtml(activityLabel)}</strong>
         </div>
         ${renderCalendarSessionEditor(selectedDay, selectedSession)}
       </section>
@@ -2116,7 +2147,7 @@ function renderCalendarSessionEditor(day, session) {
   const rights = calendarSessionEditRights(day.date, session);
   const sessionDomainId = session.domainId || day.domain?.id || state.selectedDomainId;
   const sessionDomain = getDomain(sessionDomainId);
-  const editorAccent = session.type === "sport" ? "sport" : (sessionDomain?.accent || day.domain?.accent || "maths");
+  const editorAccent = session.type === "sport" ? activityTypeForSlot(session) : (sessionDomain?.accent || day.domain?.accent || "maths");
   const domainSelect = session.type === "sport" ? "" : `
       <div class="calendar-domain-field">
         <span>Matière</span>
@@ -2697,7 +2728,7 @@ function updateCalendarSportSlot(dayDate, dayId, slotId, patch) {
     return;
   }
   if (!lockInfo.locked && !isFutureCalendarSlot(dayDate, candidate)) {
-    alert("Impossible de placer du sport sur un horaire déjà commencé.");
+    alert("Impossible de placer une activité sur un horaire déjà commencé.");
     return;
   }
   Object.assign(slot, patch);
@@ -2837,18 +2868,21 @@ function addSportSlot(weekKey, dayId, presetId = "sport-evening") {
   const slots = sportSlotsForPlanningDay(day);
   if (slots.length >= 8) return;
   const preset = getSportPreset(presetId) || SPORT_PRESETS[0];
+  const activityType = activityTypeForSlot(preset);
   const candidate = {
-    id: `sport-${Date.now()}`,
-    label: preset?.label || "Sport",
+    id: `${activityType}-${Date.now()}`,
+    activityType,
+    label: preset?.label || activityLabelForSlot(preset),
     start: preset?.start || "18:00",
     end: preset?.end || "19:00",
   };
   if (!isFutureProgrammingSlot(weekKey, dayId, candidate)) {
-    blockPastPlanningEdit("Impossible d'ajouter du sport sur un horaire déjà commencé.");
+    blockPastPlanningEdit("Impossible d'ajouter une activité sur un horaire déjà commencé.");
     return;
   }
   slots.push({
     id: candidate.id,
+    activityType: candidate.activityType,
     label: candidate.label,
     start: candidate.start,
     end: candidate.end,
@@ -2875,7 +2909,7 @@ function updateSportSlot(weekKey, dayId, slotId, patch) {
     return;
   }
   if (!lockInfo.locked && !isFutureProgrammingSlot(weekKey, dayId, candidate)) {
-    blockPastPlanningEdit("Impossible de placer du sport sur un horaire déjà commencé.", slotId);
+    blockPastPlanningEdit("Impossible de placer une activité sur un horaire déjà commencé.", slotId);
     return;
   }
   Object.assign(slot, patch);
@@ -2888,6 +2922,7 @@ function applySportSlotPreset(weekKey, dayId, slotId, presetId) {
   const preset = getSportPreset(presetId);
   if (!preset) return;
   updateSportSlot(weekKey, dayId, slotId, {
+    activityType: activityTypeForSlot(preset),
     label: preset.label,
     start: preset.start,
     end: preset.end,
@@ -2934,12 +2969,14 @@ function renderProgramming() {
   const scheduleDomain = getDomain(scheduleDay.domainId) || domains()[0];
   const scheduleSlots = scheduleDayEnabled ? slotsForDay(scheduleDay, scheduleDomain.id) : [];
   const scheduleSportSlots = scheduleDayEnabled ? sportSlotsForDay(scheduleDay) : [];
+  const scheduleBikeCount = scheduleSportSlots.filter((slot) => activityTypeForSlot(slot) === "bike").length;
+  const scheduleSportCount = scheduleSportSlots.length - scheduleBikeCount;
   const slotsFull = !scheduleDayEnabled || scheduleSlots.length >= MAX_COURSE_SLOTS_PER_DAY;
   const sportSlotsFull = !scheduleDayEnabled || scheduleSportSlots.length >= 8;
   const scheduleDayAssignmentLocked = isProgrammingDayAssignmentLocked(weekKey, scheduleDay);
   const scheduleSummary = scheduleDayEnabled
-    ? `${scheduleDay.longLabel} · ${scheduleDomain.shortTitle} · ${scheduleSlots.length} cours · ${scheduleSportSlots.length} sport`
-    : `${scheduleDay.longLabel} · 0 cours · 0 sport`;
+    ? `${scheduleDay.longLabel} · ${scheduleDomain.shortTitle} · ${scheduleSlots.length} cours · ${scheduleSportCount} sport · ${scheduleBikeCount} vélo`
+    : `${scheduleDay.longLabel} · 0 cours · 0 sport · 0 vélo`;
   const activeDayCount = week.days.filter((day) => day.enabled !== false).length;
   const courseSlotCount = week.days.reduce((count, day) => {
     if (day.enabled === false) return count;
@@ -3012,9 +3049,11 @@ function renderProgramming() {
             const enabled = day.enabled !== false;
             const dayAssignmentLocked = isProgrammingDayAssignmentLocked(weekKey, day);
             const courseCount = enabled ? slotsForDay(day, domain.id).length : 0;
-            const sportCount = enabled ? sportSlotsForDay(day).length : 0;
+            const activities = enabled ? sportSlotsForDay(day) : [];
+            const bikeCount = activities.filter((slot) => activityTypeForSlot(slot) === "bike").length;
+            const sportCount = activities.length - bikeCount;
             const summary = enabled
-              ? `${courseCount} cours${sportCount ? ` - ${sportCount} sport` : ""}`
+              ? `${courseCount} cours${sportCount ? ` - ${sportCount} sport` : ""}${bikeCount ? ` - ${bikeCount} vélo` : ""}`
               : "0 cours";
             return `
               <article class="day-editor-row accent-${domain?.accent || "maths"}${enabled ? "" : " day-disabled"}${dayAssignmentLocked ? " day-locked" : ""}">
@@ -3129,10 +3168,10 @@ function renderProgramming() {
           return `<button class="slot-add-button" type="button" data-add-slot-preset="${preset.id}" data-slot-week="${weekKey}" data-slot-day="${scheduleDay.id}" data-slot-domain="${scheduleDomain.id}" ${disabled ? "disabled" : ""} ${title ? `title="${escapeHtml(title)}"` : ""}>+ ${escapeHtml(preset.label)}</button>`;
         }).join("")}
       </div>
-      <div class="schedule-subject-badge sport-schedule-badge" aria-label="Sport du jour">
-        <span>Sport du jour</span>
-        <strong>${scheduleSportSlots.length ? `${scheduleSportSlots.length} creneau${scheduleSportSlots.length > 1 ? "x" : ""}` : "Aucun sport place"}</strong>
-        <small>${scheduleDayEnabled ? `Ces horaires appartiennent au jour selectionne, pas a la matiere ${escapeHtml(scheduleDomain.shortTitle)}.` : "Reactive ce jour dans Matieres pour placer du sport."}</small>
+      <div class="schedule-subject-badge sport-schedule-badge" aria-label="Activités du jour">
+        <span>Activités du jour</span>
+        <strong>${scheduleSportSlots.length ? `${scheduleSportCount} sport · ${scheduleBikeCount} vélo` : "Aucune activité placée"}</strong>
+        <small>${scheduleDayEnabled ? `Ces horaires appartiennent au jour sélectionné, pas à la matière ${escapeHtml(scheduleDomain.shortTitle)}.` : "Réactive ce jour dans Matières pour placer du sport ou du vélo."}</small>
       </div>
       <div class="slot-editor-list">
         ${scheduleSportSlots.length
@@ -3141,28 +3180,30 @@ function renderProgramming() {
                 const lockInfo = programmingSlotLockInfo(weekKey, scheduleDay.id, slot);
                 const slotLocked = lockInfo.locked;
                 const canEditEnd = !slotLocked || lockInfo.canEditEnd;
+                const activityLabel = activityLabelForSlot(slot);
+                const activityType = activityTypeForSlot(slot);
                 return `
-                  <article class="slot-editor-row sport-slot-editor-row slot-period-sport${slotLocked ? " slot-locked-row" : ""}">
+                  <article class="slot-editor-row sport-slot-editor-row slot-period-${activityType}${activityType === "bike" ? " bike-slot-editor-row" : ""}${slotLocked ? " slot-locked-row" : ""}">
                     <div class="slot-editor-header">
-                      <span class="slot-period-badge">Sport</span>
-                      <input type="text" value="${escapeHtml(slot.label)}" aria-label="Nom du sport" data-sport-label="${slot.id}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" ${slotLocked ? "disabled" : ""}>
-                      <button class="slot-delete-icon" type="button" data-sport-delete="${slot.id}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" aria-label="Supprimer ce sport" ${slotLocked ? "disabled" : ""}>×</button>
+                      <span class="slot-period-badge">${escapeHtml(activityLabel)}</span>
+                      <input type="text" value="${escapeHtml(slot.label)}" aria-label="Nom de l'activité" data-sport-label="${slot.id}" data-activity-type="${activityType}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" ${slotLocked ? "disabled" : ""}>
+                      <button class="slot-delete-icon" type="button" data-sport-delete="${slot.id}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" aria-label="Supprimer ${escapeHtml(activityLabel.toLowerCase())}" ${slotLocked ? "disabled" : ""}>×</button>
                     </div>
                     <div class="slot-editor-body">
                       <div class="slot-times-row">
                         <label class="slot-field">
                           <span>Debut</span>
-                          <input type="time" value="${escapeHtml(slot.start)}" aria-label="Debut sport" data-sport-start="${slot.id}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" ${slotLocked ? "disabled" : ""}>
+                          <input type="time" value="${escapeHtml(slot.start)}" aria-label="Début ${escapeHtml(activityLabel.toLowerCase())}" data-sport-start="${slot.id}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" ${slotLocked ? "disabled" : ""}>
                         </label>
                         <label class="slot-field">
                           <span>Fin</span>
-                          <input type="time" value="${escapeHtml(slot.end)}" aria-label="Fin sport" data-sport-end="${slot.id}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" ${canEditEnd ? "" : "disabled"}>
+                          <input type="time" value="${escapeHtml(slot.end)}" aria-label="Fin ${escapeHtml(activityLabel.toLowerCase())}" data-sport-end="${slot.id}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" ${canEditEnd ? "" : "disabled"}>
                         </label>
                       </div>
                       <label class="slot-field">
                         <span>Mode rapide</span>
                         <select data-sport-preset="${slot.id}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" aria-label="Mode rapide pour ${escapeHtml(slot.label)}" ${slotLocked ? "disabled" : ""}>
-                          <option value="">Choisir un horaire sport</option>
+                          <option value="">Choisir une activité et un horaire</option>
                           ${SPORT_PRESETS.map((preset) => {
                             const timeLocked = !isFutureProgrammingSlot(weekKey, scheduleDay.id, preset);
                             return `<option value="${preset.id}" ${timeLocked ? "disabled" : ""}>${escapeHtml(preset.label)} · ${escapeHtml(preset.start)}-${escapeHtml(preset.end)}${timeLocked ? " · passé" : ""}</option>`;
@@ -3175,16 +3216,18 @@ function renderProgramming() {
                 `;
               })
               .join("")
-          : `<p class="sport-empty-note">Aucun horaire de sport pour ${escapeHtml(scheduleDay.longLabel)}.</p>`}
+          : `<p class="sport-empty-note">Aucun horaire de sport ou de vélo pour ${escapeHtml(scheduleDay.longLabel)}.</p>`}
       </div>
       <div class="slot-add-grid">
         ${SPORT_PRESETS.map((preset) => {
           const timeLocked = !isFutureProgrammingSlot(weekKey, scheduleDay.id, preset);
           const disabled = sportSlotsFull || timeLocked;
           const title = sportSlotsFull
-            ? scheduleDayEnabled ? "Maximum 8 sports" : "Jour sans cours"
+            ? scheduleDayEnabled ? "Maximum 8 activités" : "Jour sans cours"
             : timeLocked ? "Horaire deja commence" : "";
-          return `<button class="slot-add-button sport-add-button" type="button" data-add-sport-preset="${preset.id}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" ${disabled ? "disabled" : ""} ${title ? `title="${escapeHtml(title)}"` : ""}>+ ${escapeHtml(preset.label)}</button>`;
+          const buttonClass = activityTypeForSlot(preset) === "bike" ? "bike-add-button" : "sport-add-button";
+          const buttonLabel = activityTypeForSlot(preset) === "bike" ? "🚲 Vélo" : preset.label;
+          return `<button class="slot-add-button ${buttonClass}" type="button" data-add-sport-preset="${preset.id}" data-sport-week="${weekKey}" data-sport-day="${scheduleDay.id}" ${disabled ? "disabled" : ""} ${title ? `title="${escapeHtml(title)}"` : ""}>+ ${escapeHtml(buttonLabel)}</button>`;
         }).join("")}
       </div>
       <div class="programming-actions">
@@ -3274,7 +3317,8 @@ function attachProgrammingHandlers(root) {
 
   root.querySelectorAll("[data-sport-label]").forEach((input) => {
     input.addEventListener("change", () => {
-      updateSportSlot(input.dataset.sportWeek, input.dataset.sportDay, input.dataset.sportLabel, { label: input.value.trim() || "Sport" });
+      const fallbackLabel = input.dataset.activityType === "bike" ? "Vélo" : "Sport";
+      updateSportSlot(input.dataset.sportWeek, input.dataset.sportDay, input.dataset.sportLabel, { label: input.value.trim() || fallbackLabel });
     });
   });
 

@@ -414,6 +414,10 @@ h3 {
   color: #ff6b63;
 }
 
+.calendar-now-card.bike-card {
+  color: #7dd3fc;
+}
+
 .calendar-now-empty {
   color: rgba(255, 255, 255, 0.28);
 }
@@ -913,6 +917,31 @@ h3 {
     rgba(22, 12, 12, 0.96);
 }
 
+.sport-block.bike-block {
+  color: #7dd3fc;
+  border-color: rgba(125, 211, 252, 0.5);
+  border-left-color: #7dd3fc;
+  background:
+    linear-gradient(90deg, rgba(125, 211, 252, 0.27), rgba(125, 211, 252, 0.1) 62%, rgba(255, 255, 255, 0.025)),
+    rgba(9, 25, 34, 0.92);
+}
+
+.sport-block.bike-block time,
+.sport-block.bike-block span {
+  color: rgba(220, 246, 255, 0.86);
+}
+
+.sport-block.bike-block em {
+  background: rgba(125, 211, 252, 0.22);
+  color: rgba(232, 249, 255, 0.96);
+}
+
+.sport-block.bike-block.selected {
+  background:
+    linear-gradient(90deg, rgba(125, 211, 252, 0.4), rgba(125, 211, 252, 0.16) 62%, rgba(255, 255, 255, 0.035)),
+    rgba(9, 25, 34, 0.97);
+}
+
 .detail-card {
   display: grid;
   gap: 13px;
@@ -1130,6 +1159,10 @@ h3 {
   color: #ff6b63;
 }
 
+.calendar-editor-bike {
+  color: #7dd3fc;
+}
+
 .calendar-domain-options {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1259,6 +1292,10 @@ h3 {
 
 .sport-detail-card {
   color: #ff6b63;
+}
+
+.sport-detail-card.bike-detail-card {
+  color: #7dd3fc;
 }
 
 .sport-schedule-badge {
@@ -2610,6 +2647,15 @@ h3 {
   --slot-accent-soft: rgba(255, 107, 99, 0.14);
 }
 
+.slot-period-bike {
+  --slot-accent: #7dd3fc;
+  --slot-accent-soft: rgba(125, 211, 252, 0.16);
+}
+
+.bike-slot-editor-row {
+  border-color: rgba(125, 211, 252, 0.32);
+}
+
 .day-editor-row {
   grid-template-columns: 86px minmax(0, 1fr);
   align-items: center;
@@ -3059,6 +3105,22 @@ h3 {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.02)),
     rgba(178, 59, 54, 0.34);
+}
+
+.slot-add-button.bike-add-button {
+  border-color: rgba(125, 211, 252, 0.4);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.018)),
+    rgba(40, 139, 184, 0.25);
+  color: rgba(226, 248, 255, 0.96);
+}
+
+.slot-add-button.bike-add-button:not(:disabled):hover,
+.slot-add-button.bike-add-button:not(:disabled):focus-visible {
+  border-color: rgba(125, 211, 252, 0.62);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025)),
+    rgba(40, 139, 184, 0.38);
 }
 
 .slot-add-button:disabled {
