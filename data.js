@@ -15,6 +15,7 @@ window.STUDY_PROGRAM = [
     id: "l1",
     title: "L1 Mathematiques",
     phase: phases.l1,
+    sourceUrl: "https://app.notion.com/p/2ef811750021803dbe63f120bca7d103",
     blocks: [
       {
         title: "Bloc 0 - Outils fondamentaux et raisonnement",
@@ -64,6 +65,11 @@ window.STUDY_PROGRAM = [
           item("l1-21", "Developpements limites", "Taylor, calcul de DL et applications asymptotiques.", ["Analyse et probabilite L1, chapitres 9 et 10", "Algebre et Analyse L1, chapitre 17"], 6, 2),
           item("l1-22", "Integration", "Riemann, primitives, IPP et changement de variable.", ["Analyse et probabilite L1, chapitre 11", "Algebre et Analyse L1, chapitres 18 et 19"], 7, 2),
           item("l1-23", "Equations differentielles", "Equations lineaires d'ordre 1 et 2 a coefficients constants.", ["Analyse et probabilite L1, chapitre 4", "Algebre et Analyse L1, chapitre 20"], 6, 2),
+        ],
+      },
+      {
+        title: "Bloc 5 - Geometrie et approfondissement",
+        items: [
           item("l1-24", "Reduction des endomorphismes", "Valeurs propres, vecteurs propres et diagonalisation en transition L2.", ["Algebre et Analyse L1, chapitre 12"], 6, 2),
         ],
       },
@@ -73,6 +79,7 @@ window.STUDY_PROGRAM = [
     id: "l2",
     title: "L2 Mathematiques",
     phase: phases.l2,
+    sourceUrl: "https://app.notion.com/p/2f0811750021805d9604d7a5ff45b48e",
     blocks: [
       {
         title: "Bloc 1 - Algebre lineaire fondamentale",
@@ -113,12 +120,17 @@ window.STUDY_PROGRAM = [
         ],
       },
       {
-        title: "Bloc 4 - Integration, geometrie differentielle et EDO",
+        title: "Bloc 4 - Analyse : integration et geometrie differentielle",
         items: [
           item("l2-23", "Courbes et surfaces", "Arcs, nappes parametrees, plan tangent, fonctions implicites.", ["Analyse et algebre, chapitre 11"], 6, 2),
           item("l2-24", "Integrales a parametre", "Continuite, derivation et integration sous le signe integral.", ["Toutes les maths en MP-MPI, chapitre 12"], 6, 1),
           item("l2-25", "Integrales multiples", "Fubini, integrales doubles/triples et changements de variables.", ["Analyse et probabilite L2, chapitre 5", "Analyse et algebre, chapitre 12"], 7, 1),
           item("l2-26", "Integration sur courbes et surfaces", "Formes differentielles, Stokes, integrales curvilignes et de surface.", ["Analyse et algebre, chapitre 13"], 7, 2),
+        ],
+      },
+      {
+        title: "Bloc 5 - Equations differentielles",
+        items: [
           item("l2-27", "Equations differentielles L2", "Existence, unicite et etude qualitative.", ["Analyse 2e annee, chapitre 11", "Analyse et probabilite L2, chapitre 8"], 6, 2),
           item("l2-28", "Systemes differentiels lineaires", "Resolution via reduction des endomorphismes.", ["Algebre et Geometrie 2e annee, chapitre 5"], 6, 2),
         ],
@@ -129,6 +141,7 @@ window.STUDY_PROGRAM = [
     id: "l3",
     title: "L3 Mathematiques",
     phase: phases.l3,
+    sourceUrl: "https://app.notion.com/p/2f081175002180d3a653f82a8bfe97b1",
     blocks: [
       {
         title: "Analyse L3 - special IA",
@@ -192,26 +205,37 @@ window.STUDY_PROGRAM = [
     id: "proba",
     title: "Probabilites et Statistiques",
     phase: phases.proba,
+    sourceUrl: "https://app.notion.com/p/2f081175002180ffa63edbf111bebd68",
     blocks: [
       {
-        title: "Bloc 1 - Fondamentaux et probabilites",
+        title: "Chapitre 1 - Les fondamentaux (niveau L1)",
         items: [
           item("ps-01", "Statistique descriptive", "Tableaux, indicateurs, dispersion et representations.", ["Statistique descriptive, Mementos LMD"], 5, 2),
+        ],
+      },
+      {
+        title: "Chapitre 2 - Probabilites",
+        items: [
           item("ps-02", "Probabilites L1", "Denombrement, probabilites finies, variables et vecteurs aleatoires finis.", ["Analyse et probabilite L1, chapitres 12 a 15", "Emmanuel Bougnol, playlists denombrement/probabilite/variables aleatoires"], 8, 1),
-          item("ps-03", "Probabilites discretes L2", "Variables discretes et probabilites discretes.", ["Jaber Jamel, Probabilites discretes MP-MP, chapitres 9 et 10", "Analyse et probabilite L2 en annexe"], 8, 1),
-          item("ps-04", "Probabilites L3 mesurees", "Probabilites continues, integration, convergence et variables aleatoires generales.", ["Garet-Kurtzmann, De l'integration aux probabilites, tous les chapitres"], 12, 1),
+          item("ps-03", "Probabilites L2", "Parcours complet de probabilites de niveau L2.", ["Introduction aux probabilites, Dalang-Conus, Pfister, tous les chapitres", "Analyse et probabilite L2 en annexe"], 8, 1),
+          item("ps-04", "Probabilites L3", "Probabilites continues, integration, convergence et variables aleatoires generales.", ["Garet-Kurtzmann, De l'integration aux probabilites, tous les chapitres"], 12, 1),
           item("ps-05", "Processus stochastiques", "Markov discret/continu, renouvellement, martingales, mouvement brownien.", ["Sabin Lessard, Processus stochastiques, chapitres 1 a 5"], 12, 1),
         ],
       },
       {
-        title: "Bloc 2 - Statistique et series temporelles",
+        title: "Chapitre 3 - Statistique inferentielle (niveau L3)",
         items: [
           item("ps-06", "Statistique inferentielle", "Estimation, tests, intervalles et modeles statistiques.", ["Olivier Marchal, Statistiques inferentielles"], 10, 1),
+        ],
+      },
+      {
+        title: "Chapitre 4 - Analyse des series temporelles (niveau L3)",
+        items: [
           item("ps-07", "Series temporelles", "Modeles temporels, stationnarite, prevision et analyse appliquee.", ["Bourbonnais et Terraza, Analyse des series temporelles, 3e edition"], 10, 2),
         ],
       },
       {
-        title: "B3 - ML, DL, RL et ML Engineering",
+        title: "Chapitre 5 - ML, DL, RL et ML Engineering",
         items: [
           item("ps-ai-01", "Cadre general du Machine Learning", "Evaluation, supervise, regression, regularisation, k-NN, arbres, SVM, reduction de dimension, clustering et premiere intuition des reseaux.", ["Introduction au machine learning - 3e edition (Chloe-Agathe Azencott)", "Dossier 01_Introduction_theorique_et_algorithmes_classiques"], 10, 1),
           item("ps-ai-02", "Python Data Science - manipulations", "Python data, NumPy, pandas, chargement, nettoyage, valeurs manquantes, transformations, jointures, groupby et visualisation.", ["Analyse_de_donnees_avec_Python_pedagogique.pdf", "Dossier 02_Python_data_et_notebooks", "Livrable : notebook EDA simple"], 10, 1),
@@ -230,7 +254,7 @@ window.STUDY_PROGRAM = [
           item("ps-ai-15", "Vision par ordinateur avec CNN", "Convolution, pooling, padding, strides, classification d'images, transfer learning, VGG, ResNet et EfficientNet si utilises.", ["Udemy - Deep Learning: Classification des Images (TensorFlow, Keras)", "Livrable : projet CNN avec transfer learning et ablations"], 8, 2),
           item("ps-ai-16", "Deep Learning fondamental avec les livres", "Tenseurs, autograd, pertes, optimisation, regularisation, CNN, espaces latents, autoencodeurs, VAE, MLP, RNN, GAN, diffusion, RL et deploiement.", ["Mathematiques et architectures de l'apprentissage profond.pdf", "deep_learning_full.pdf", "Deep Learning avec Keras et TensorFlow (avec signets).pdf", "Dossier 10_Deep_learning_fondamental_et_pratique"], 14, 1),
           item("ps-ai-17", "PyTorch pour recherche et engineering", "Tenseurs, autograd, regression, MLP, CNN, RNN/LSTM, Transformers, ViT, U-Net, transfer learning, segmentation et series temporelles.", ["YouTube - Apprendre PyTorch pas a pas", "Livrable : reimplementation PyTorch d'un modele Keras"], 10, 1),
-          item("ps-ai-18", "Theorie avancee du Deep Learning", "ANN, CNN, ResNet, RNN/LSTM, autoencodeurs, attention, GNN, approximation, optimisation, generalisation, PINN/DGM/DKM optionnels, NTK et dynamique d'entrainement.", ["Deep_Neural_Network.fr.pdf", "Les Principes de la Theorie de l'Apprentissage Profond.pdf", "Dossier 10.5_Theorie_avancee_du_deep_learning"], 16, 2),
+          item("ps-ai-18", "Theorie avancee du Deep Learning", "ANN, CNN, ResNet, RNN/LSTM, autoencodeurs, attention, GNN, approximation, optimisation, generalisation, PINN/DGM/DKM optionnels, NTK et dynamique d'entrainement.", ["Theorie mathematique de l'apprentissage profond.pdf", "Deep_Neural_Network.fr.pdf", "Les Principes de la Theorie de l'Apprentissage Profond.pdf", "Dossier 10.5_Theorie_avancee_du_deep_learning"], 16, 2),
           item("ps-ai-19", "Reseaux neuronaux historiques et pont vers RL", "Hopfield, Boltzmann/RBM, perceptron, MLP, SGD/backprop, CNN/RNN, autoencodeurs, TD learning et Q-learning.", ["Mehlig_Machine_learning_with_neural_networks_FR.pdf", "Dossier 11_Reseaux_neuronaux_transition_historique_et_pont_vers_RL", "Livrable : note valeur tabulaire vers reseau"], 10, 2),
           item("ps-ai-20", "NLP et Hugging Face pratique", "Tokenization, Transformers, Datasets, Tokenizers, Accelerate, Hub, fine-tuning et taches NLP classiques.", ["Cours NLP officiel Hugging Face", "YouTube - Apprendre Hugging Face pas a pas", "Livrable : fine-tuning NLP simple"], 10, 1),
           item("ps-ai-21", "Transformers et architectures modernes", "Autodiff, initialisation, CNN, equivariance, groupes, varietes, GNN, Deep Sets, Transformers, self-attention, LLM, RAG, alignement, RLHF, DPO et cours pratique NLP.", ["Smets_Mathematics_of_Neural_Networks_fr.pdf", "Geometric Deep Learning Grids Groups Graphs Geodesics and Gauges - FR.pdf", "Transformers_The_Definitive_Guide_FR_LaTeX.pdf", "Fondements des grands modeles de langage.pdf", "Udemy - Transformers for NLP", "Dossier 12_Architectures_modernes_avancees"], 16, 1),
@@ -251,38 +275,50 @@ window.STUDY_PROGRAM.push({
   id: "info",
   title: "Informatique",
   phase: "Domaine 3 - Informatique",
+  sourceUrl: "https://app.notion.com/p/2ec8117500218030b709fa683fdd72ac",
   blocks: [
     {
-      title: "Bloc 1 - Informatique lycee",
+      title: "Chapitre 1 - Informatique lycee",
       items: [
-        item("info-01", "NSI Premiere", "Bases d'algorithmique, variables, conditions, boucles et fonctions.", ["Notes algorithmiques Grafikart", "Livre NSI Premiere, chapitres 1 a 5", "Exercices du chapitre 1 a 5"], 8, 1),
+        item("info-01", "NSI Premiere", "Algorithmique, variables, conditions, boucles et fonctions.", ["Notes algorithmiques des cours vidéo de Grafikart", "NSI Premiere - chapitres 1 a 5", "Exercices du chapitre 1 a 5"], 8, 1),
         item("info-03", "NSI Terminale", "Approfondissement des structures de donnees, graphes et programmation.", ["Programme NSI Terminale"], 10, 2),
       ],
     },
     {
-      title: "Bloc 2 - Python",
+      title: "Chapitre 2 - Les bases de Python",
       items: [
-        item("info-04", "IDE et environnement", "Prise en main de Visual Studio Code et organisation du travail Python.", ["Playlist Visual Studio Code"], 4, 2),
-        item("info-05", "Introduction a Python", "Syntaxe, types, fonctions, modules et premiers scripts.", ["Python cours video", "Cours Udemy Python"], 10, 1),
-        item("info-06", "Python pour les maths", "Utiliser Python pour calculer, representer et explorer des objets mathematiques.", ["Python pour les Maths"], 8, 1),
-        item("info-07", "Methodes numeriques avec Python", "Implementation de methodes numeriques et calcul scientifique simple.", ["Methodes numeriques avec Python"], 10, 1),
+        item("info-04", "IDE et environnement", "Prise en main de Visual Studio Code et organisation du travail Python.", ["Playlist Visual Studio Code", "https://www.youtube.com/playlist?list=PLrSOXFDHBtfFzgjFG8ac8LEHKPbE8loan"], 4, 2),
+        item("info-05", "Introduction a Python", "Syntaxe, types, fonctions, modules et premiers scripts.", ["Python cours vidéo", "https://www.youtube.com/playlist?list=PLrSOXFDHBtfHg8fWBd7sKPxEmahwyVBkC", "Cours Udemy Python"], 10, 1),
+        item("info-06", "Python pour les maths", "Utiliser Python pour calculer, representer et explorer des objets mathematiques.", ["Programmation_Python_Mathematiques_TOC"], 8, 1),
+        item("info-07", "Methodes numeriques avec Python", "Implementer des methodes numeriques et du calcul scientifique simple.", ["Methodes numeriques avec Python"], 10, 1),
       ],
     },
     {
-      title: "Bloc 3 - Informatique sup",
+      title: "Chapitre 3 - Informatique sup",
       items: [
-        item("info-08", "Architecture des machines", "Bases de l'architecture machine, memoire, processeur et representation.", ["Cours d'architecture EvoluNoob"], 8, 2),
-        item("info-09", "Introduction a l'assembleur", "Premiers modeles d'execution bas niveau et logique assembleur.", ["Cours assembleur EvoluNoob"], 8, 2),
+        item("info-08", "Architecture des machines", "Architecture machine, memoire, processeur et representation.", ["Architecture des machines et des systemes informatiques", "https://www.youtube.com/playlist?list=PLrSOXFDHBtfFrlG51dj8p_zCV994yWahY"], 8, 2),
+        item("info-15", "Langage C - memoire et programmation bas niveau", "Compilation, types, fonctions, tableaux, chaines, pointeurs, structures, fichiers, allocation dynamique et preprocesseur.", ["Programmer en langage C - Cours et exercices corriges, Claude Delannoy, 5e edition", "Le langage C - Apprendre a programmer, Jean-Michel Lery", "https://www.youtube.com/playlist?list=PLrSOXFDHBtfHHRAZc013y4xNA6Y4B1CWP", "Exercices en langage C - Claude Delannoy"], 14, 1),
+        item("info-09", "Introduction a l'assembleur", "Premiers modeles d'execution bas niveau et logique assembleur.", ["Programmation Assembleur x86, 32 et 64 bits sous Linux Ubuntu", "https://www.youtube.com/playlist?list=PLrSOXFDHBtfEs7PCC6r44iXiX5gMlbjcR"], 8, 2),
         item("info-10", "Informatique MPSI", "Algorithmique et programmation de niveau superieur.", ["Programme informatique MPSI"], 10, 2),
-        item("info-11", "Programmation efficace", "Complexite, structures de donnees et choix d'implementation.", ["Algorithmique avancee"], 10, 1),
+        item("info-11", "Programmation efficace", "Complexite, structures de donnees et choix d'implementation.", ["Programmation efficace"], 10, 1),
       ],
     },
     {
-      title: "Bloc 4 - Projets",
+      title: "Chapitre 4 - Algorithmique ++",
       items: [
-        item("info-12", "Algorithmique avancee", "Renforcer les algorithmes classiques et les raisonnements de complexite.", ["Algorithmique ++"], 12, 1),
-        item("info-13", "HTML et CSS", "Bases de l'integration web et interfaces simples.", ["HTML5 et CSS3 - formation ultime"], 8, 2),
-        item("info-14", "Projet backend", "Construire un projet backend organise et maintenable.", ["Projet Ingenieur Backend"], 12, 1),
+        item("info-12", "Algorithmique avancee", "Renforcer les algorithmes classiques et les raisonnements de complexite.", ["Algorithmique - cours avec 957 exercices et 158 problemes"], 12, 1),
+      ],
+    },
+    {
+      title: "Chapitre 5 - HTML/CSS",
+      items: [
+        item("info-13", "HTML et CSS", "Bases de l'integration web et interfaces simples.", ["HTML5 et CSS3 : maitrisez les standards des applications Web", "HTML5 et CSS3 - Cours et exercices corriges", "Premiers pas en CSS3 et HTML5", "https://www.udemy.com/course/html5-et-css3-la-formation-ultime/"], 8, 2),
+      ],
+    },
+    {
+      title: "Chapitre 6 - Projet Backend",
+      items: [
+        item("info-14", "Projet backend", "Construire un projet backend organise et maintenable.", ["Projet Ingenieur Backend", "https://app.notion.com/p/30081175002180209e39dfaf4915e58f"], 12, 1),
       ],
     },
   ],

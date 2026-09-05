@@ -1,0 +1,2015 @@
+{
+  "STUDY_PROGRAM": [
+    {
+      "id": "l1",
+      "title": "L1 Mathematiques",
+      "phase": "Phase 1 - Licence 1 : fondations",
+      "sourceUrl": "https://app.notion.com/p/2ef811750021803dbe63f120bca7d103",
+      "blocks": [
+        {
+          "title": "Bloc 0 - Outils fondamentaux et raisonnement",
+          "items": [
+            {
+              "id": "l1-01",
+              "title": "Logique et raisonnement",
+              "summary": "Connecteurs, quantificateurs, preuve par contraposée, absurde et recurrence.",
+              "resources": [
+                "Algebre et Geometrie L1, chapitre 1",
+                "Algebre et Analyse L1, chapitre 1"
+              ],
+              "hours": 5,
+              "priority": 1,
+              "sequence": 1
+            },
+            {
+              "id": "l1-02",
+              "title": "Ensembles et applications",
+              "summary": "Union, intersection, complementaire, injection, surjection, bijection.",
+              "resources": [
+                "Algebre et Geometrie L1, chapitre 1",
+                "Algebre et Analyse L1, chapitre 2"
+              ],
+              "hours": 5,
+              "priority": 1,
+              "sequence": 2
+            },
+            {
+              "id": "l1-03",
+              "title": "Techniques en analyse",
+              "summary": "Inegalites et techniques de base en analyse.",
+              "resources": [
+                "Techniques en analyse 1 - Inegalites"
+              ],
+              "hours": 4,
+              "priority": 1,
+              "sequence": 3
+            },
+            {
+              "id": "l1-03b",
+              "title": "Trigonometrie",
+              "summary": "Formules et manipulations trigonometriques de premiere annee.",
+              "resources": [
+                "Toutes les mathematiques premiere annee de MPSI, chapitres 1 et 2"
+              ],
+              "hours": 4,
+              "priority": 1,
+              "sequence": 4
+            },
+            {
+              "id": "l1-03c",
+              "title": "Calcul algebrique",
+              "summary": "Sommes, produits et manipulations algebriques fondamentales.",
+              "resources": [
+                "Calcul algebrique 1 - Sommes et produits"
+              ],
+              "hours": 4,
+              "priority": 1,
+              "sequence": 5
+            },
+            {
+              "id": "l1-04",
+              "title": "Le corps des reels",
+              "summary": "Borne superieure, intervalles, ordre et topologie de la droite reelle.",
+              "resources": [
+                "Analyse et probabilite L1, chapitre 1",
+                "Algebre et Geometrie L1, chapitre 2",
+                "Algebre et Analyse L1, chapitre 3"
+              ],
+              "hours": 6,
+              "priority": 1,
+              "sequence": 6
+            }
+          ]
+        },
+        {
+          "title": "Bloc 1 - Structures algebriques",
+          "items": [
+            {
+              "id": "l1-05",
+              "title": "Arithmetique des entiers",
+              "summary": "Division euclidienne, PGCD, Bezout, nombres premiers.",
+              "resources": [
+                "Algebre et Geometrie L1, chapitre 6"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 7
+            },
+            {
+              "id": "l1-06",
+              "title": "Groupes, anneaux, corps",
+              "summary": "Definitions et premiers exemples de structures algebriques.",
+              "resources": [
+                "livre2_algebre_II2_groupes_anneaux_corps_signets_specialises.pdf",
+                "Algebre et Geometrie L1, chapitre 7"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 8
+            },
+            {
+              "id": "l1-07",
+              "title": "Nombres complexes",
+              "summary": "Formes algebrique, trigonometrique, exponentielle et applications.",
+              "resources": [
+                "Algebre et Geometrie L1, chapitre 3",
+                "Algebre et Analyse L1, chapitre 4"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 9
+            },
+            {
+              "id": "l1-08",
+              "title": "Geometrie elementaire",
+              "summary": "Vecteurs, droites, plans, produit scalaire et produit vectoriel.",
+              "resources": [
+                "Algebre et Geometrie L1, chapitres 4 et 5"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 10
+            },
+            {
+              "id": "l1-09",
+              "title": "Polynomes et fractions rationnelles",
+              "summary": "Anneau K[X], division euclidienne, racines, decomposition en elements simples.",
+              "resources": [
+                "Algebre et Geometrie L1, chapitre 8",
+                "Algebre et Analyse L1, chapitres 6 et 7"
+              ],
+              "hours": 7,
+              "priority": 2,
+              "sequence": 11
+            }
+          ]
+        },
+        {
+          "title": "Bloc 2 - Analyse : fondements",
+          "items": [
+            {
+              "id": "l1-10",
+              "title": "Suites numeriques",
+              "summary": "Convergence, monotonie, suites adjacentes et recurrentes.",
+              "resources": [
+                "Analyse et probabilite L1, chapitres 5 et 10",
+                "Algebre et Analyse L1, chapitre 5"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 12
+            },
+            {
+              "id": "l1-11",
+              "title": "Series numeriques",
+              "summary": "Definition et convergence des series numeriques.",
+              "resources": [
+                "Playlist Francois Giraud - Fanny Laignel",
+                "Tout ce qu'il faut savoir MPSI/MP2I"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 13
+            },
+            {
+              "id": "l1-12",
+              "title": "Continuite",
+              "summary": "Limites, continuite, proprietes globales des fonctions continues.",
+              "resources": [
+                "Analyse et probabilite L1, chapitre 7",
+                "Algebre et Analyse L1, chapitre 13"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 14
+            },
+            {
+              "id": "l1-13",
+              "title": "Fonctions usuelles",
+              "summary": "Logarithmes, exponentielles, trigonometrie et fonctions reciproques.",
+              "resources": [
+                "Analyse et probabilite L1, chapitres 2 et 3",
+                "Algebre et Analyse L1, chapitre 14"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 15
+            },
+            {
+              "id": "l1-14",
+              "title": "Comparaison locale de fonctions",
+              "summary": "Equivalents, negligeabilite et developpements locaux simples.",
+              "resources": [
+                "Analyse et probabilite L1, chapitre 6",
+                "Algebre et Analyse L1, chapitre 15"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 16
+            },
+            {
+              "id": "l1-15",
+              "title": "Derivabilite",
+              "summary": "Nombre derive, theoreme de Rolle et accroissements finis.",
+              "resources": [
+                "Analyse et probabilite L1, chapitre 8",
+                "Algebre et Analyse L1, chapitre 16"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 17
+            }
+          ]
+        },
+        {
+          "title": "Bloc 3 - Algebre lineaire",
+          "items": [
+            {
+              "id": "l1-16",
+              "title": "Espaces vectoriels",
+              "summary": "Sous-espaces, familles libres, generatrices, bases et dimension.",
+              "resources": [
+                "Algebre et Geometrie L1, chapitres 11 et 13",
+                "Algebre et Analyse L1, chapitre 8"
+              ],
+              "hours": 7,
+              "priority": 1,
+              "sequence": 18
+            },
+            {
+              "id": "l1-17",
+              "title": "Applications lineaires",
+              "summary": "Noyau, image, rang, theorem du rang.",
+              "resources": [
+                "Algebre et Geometrie L1, chapitre 12",
+                "Algebre et Analyse L1, chapitre 9"
+              ],
+              "hours": 7,
+              "priority": 1,
+              "sequence": 19
+            },
+            {
+              "id": "l1-18",
+              "title": "Calcul matriciel",
+              "summary": "Operations matricielles, produit, transposee et matrices inversibles.",
+              "resources": [
+                "Algebre et Geometrie L1, chapitres 10, 14 et 15",
+                "Algebre et Analyse L1, chapitre 10"
+              ],
+              "hours": 7,
+              "priority": 1,
+              "sequence": 20
+            },
+            {
+              "id": "l1-19",
+              "title": "Systemes lineaires",
+              "summary": "Mise en equation et pivot de Gauss.",
+              "resources": [
+                "Algebre et Geometrie L1, chapitre 9",
+                "Algebre et Analyse L1, chapitre 11"
+              ],
+              "hours": 5,
+              "priority": 1,
+              "sequence": 21
+            },
+            {
+              "id": "l1-20",
+              "title": "Geometrie affine",
+              "summary": "Bases de geometrie affine et sous-espaces affines.",
+              "resources": [
+                "Algebre 1re annee, Liret et Martinais"
+              ],
+              "hours": 5,
+              "priority": 3,
+              "sequence": 22
+            }
+          ]
+        },
+        {
+          "title": "Bloc 4 - Analyse : outils avances",
+          "items": [
+            {
+              "id": "l1-21",
+              "title": "Developpements limites",
+              "summary": "Taylor, calcul de DL et applications asymptotiques.",
+              "resources": [
+                "Analyse et probabilite L1, chapitres 9 et 10",
+                "Algebre et Analyse L1, chapitre 17"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 23
+            },
+            {
+              "id": "l1-22",
+              "title": "Integration",
+              "summary": "Riemann, primitives, IPP et changement de variable.",
+              "resources": [
+                "Analyse et probabilite L1, chapitre 11",
+                "Algebre et Analyse L1, chapitres 18 et 19"
+              ],
+              "hours": 7,
+              "priority": 2,
+              "sequence": 24
+            },
+            {
+              "id": "l1-23",
+              "title": "Equations differentielles",
+              "summary": "Equations lineaires d'ordre 1 et 2 a coefficients constants.",
+              "resources": [
+                "Analyse et probabilite L1, chapitre 4",
+                "Algebre et Analyse L1, chapitre 20"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 25
+            }
+          ]
+        },
+        {
+          "title": "Bloc 5 - Geometrie et approfondissement",
+          "items": [
+            {
+              "id": "l1-24",
+              "title": "Reduction des endomorphismes",
+              "summary": "Valeurs propres, vecteurs propres et diagonalisation en transition L2.",
+              "resources": [
+                "Algebre et Analyse L1, chapitre 12"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 26
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "l2",
+      "title": "L2 Mathematiques",
+      "phase": "Phase 2 - Licence 2 : outils structurants",
+      "sourceUrl": "https://app.notion.com/p/2f0811750021805d9604d7a5ff45b48e",
+      "blocks": [
+        {
+          "title": "Bloc 1 - Algebre lineaire fondamentale",
+          "items": [
+            {
+              "id": "l2-01",
+              "title": "Structures algebriques",
+              "summary": "Revisions groupes, anneaux et corps.",
+              "resources": [
+                "Toutes les maths en MP-MPI, chapitre 1"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 27
+            },
+            {
+              "id": "l2-02",
+              "title": "Ordre, equivalence et Z/nZ",
+              "summary": "Relations d'ordre, equivalence, quotients et arithmetique modulaire.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitre 1"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 28
+            },
+            {
+              "id": "l2-03",
+              "title": "Actions de groupes",
+              "summary": "Quotients, actions, orbites et stabilisateurs.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitre 2.5"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 29
+            },
+            {
+              "id": "l2-04",
+              "title": "Complements d'algebre lineaire",
+              "summary": "Sommes de sous-espaces, dualite, determinants et rang.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitre 2"
+              ],
+              "hours": 7,
+              "priority": 1,
+              "sequence": 30
+            },
+            {
+              "id": "l2-05",
+              "title": "Diagonalisation et trigonalisation",
+              "summary": "Valeurs propres, polynome caracteristique et reduction.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitre 3"
+              ],
+              "hours": 7,
+              "priority": 1,
+              "sequence": 31
+            },
+            {
+              "id": "l2-06",
+              "title": "Structure d'un endomorphisme",
+              "summary": "Hamilton-Cayley, polynome minimal et matrices semblables.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitre 4"
+              ],
+              "hours": 7,
+              "priority": 1,
+              "sequence": 32
+            },
+            {
+              "id": "l2-07",
+              "title": "Familles sommables",
+              "summary": "Familles indexees, rearrangements et series associees.",
+              "resources": [
+                "Toutes les maths en MP-MPI, chapitre 13"
+              ],
+              "hours": 5,
+              "priority": 3,
+              "sequence": 33
+            }
+          ]
+        },
+        {
+          "title": "Bloc 2 - Series et fonctions complexes",
+          "items": [
+            {
+              "id": "l2-08",
+              "title": "Series numeriques L2",
+              "summary": "Operations, convergence, series a termes positifs.",
+              "resources": [
+                "Analyse 2e annee, chapitres 1 et 2",
+                "Analyse et algebre, chapitre 1"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 34
+            },
+            {
+              "id": "l2-09",
+              "title": "Suites et series de fonctions",
+              "summary": "Convergence simple, uniforme et normale.",
+              "resources": [
+                "Analyse 2e annee, chapitre 3",
+                "Analyse et algebre, chapitres 2 et 3"
+              ],
+              "hours": 7,
+              "priority": 1,
+              "sequence": 35
+            },
+            {
+              "id": "l2-10",
+              "title": "Fonctions complexes",
+              "summary": "Topologie de C, holomorphie et premiers outils.",
+              "resources": [
+                "Analyse et algebre, chapitre 4"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 36
+            },
+            {
+              "id": "l2-11",
+              "title": "Series entieres",
+              "summary": "Rayon de convergence et developpements en series entieres.",
+              "resources": [
+                "Analyse et probabilite L2, chapitre 3",
+                "Analyse et algebre, chapitre 5"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 37
+            },
+            {
+              "id": "l2-12",
+              "title": "Series de Fourier",
+              "summary": "Decomposition periodique et convergence.",
+              "resources": [
+                "Analyse et probabilite L2, chapitre 4",
+                "Analyse et algebre, chapitre 6"
+              ],
+              "hours": 7,
+              "priority": 1,
+              "sequence": 38
+            }
+          ]
+        },
+        {
+          "title": "Bloc 3 - Topologie, differentiel et bilineaire",
+          "items": [
+            {
+              "id": "l2-13",
+              "title": "Espaces metriques et EVN",
+              "summary": "Normes, distances, ouverts, fermes, compacite et completude.",
+              "resources": [
+                "Analyse 2e annee, chapitre 5",
+                "Analyse et algebre, chapitre 7"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 39
+            },
+            {
+              "id": "l2-14",
+              "title": "Formes lineaires et multilineaires",
+              "summary": "Formes lineaires, multilineaires et determinants.",
+              "resources": [
+                "Analyse et algebre, chapitres 3 et 4"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 40
+            },
+            {
+              "id": "l2-15",
+              "title": "Algebre bilineaire",
+              "summary": "Formes bilineaires, quadratiques, orthogonalite et isometries.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitres 6, 7 et 10",
+                "Analyse et algebre, chapitre 8"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 41
+            },
+            {
+              "id": "l2-16",
+              "title": "Espaces euclidiens",
+              "summary": "Endomorphismes euclidiens, isometries et geometrie.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitres 6 et 7"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 42
+            },
+            {
+              "id": "l2-17",
+              "title": "Espaces hermitiens",
+              "summary": "Formes sesquilineaires et formes hermitiennes.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitres 10 et 11"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 43
+            },
+            {
+              "id": "l2-18",
+              "title": "Espaces affines euclidiens",
+              "summary": "Geometrie affine euclidienne.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitre 8"
+              ],
+              "hours": 5,
+              "priority": 3,
+              "sequence": 44
+            },
+            {
+              "id": "l2-18b",
+              "title": "Geometrie plane",
+              "summary": "Droites, cercles, angles, transformations et configurations usuelles de la geometrie plane euclidienne.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitre 9"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 45
+            },
+            {
+              "id": "l2-19",
+              "title": "Convexite",
+              "summary": "Ensembles convexes, fonctions convexes et inegalites.",
+              "resources": [
+                "Toutes les maths en MP-MPI, chapitre 10"
+              ],
+              "hours": 6,
+              "priority": 1,
+              "sequence": 46
+            },
+            {
+              "id": "l2-20",
+              "title": "Fonctions de plusieurs variables",
+              "summary": "Limite, continuite et continuite uniforme.",
+              "resources": [
+                "Analyse et probabilite L2, chapitre 7",
+                "Analyse et algebre, chapitre 9"
+              ],
+              "hours": 6,
+              "priority": 1,
+              "sequence": 47
+            },
+            {
+              "id": "l2-21",
+              "title": "Fonctions vectorielles",
+              "summary": "Limites, continuite, derivabilite et geometrie.",
+              "resources": [
+                "Toutes les maths en MP-MPI, chapitre 18"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 48
+            },
+            {
+              "id": "l2-22",
+              "title": "Calcul differentiel",
+              "summary": "Differentiabilite, jacobienne, Taylor, extrema.",
+              "resources": [
+                "Analyse et probabilite L2, chapitre 7",
+                "Analyse et algebre, chapitre 10"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 49
+            }
+          ]
+        },
+        {
+          "title": "Bloc 4 - Analyse : integration et geometrie differentielle",
+          "items": [
+            {
+              "id": "l2-23",
+              "title": "Courbes et surfaces",
+              "summary": "Arcs, nappes parametrees, plan tangent, fonctions implicites.",
+              "resources": [
+                "Analyse et algebre, chapitre 11"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 50
+            },
+            {
+              "id": "l2-24",
+              "title": "Integrales a parametre",
+              "summary": "Continuite, derivation et integration sous le signe integral.",
+              "resources": [
+                "Toutes les maths en MP-MPI, chapitre 12"
+              ],
+              "hours": 6,
+              "priority": 1,
+              "sequence": 51
+            },
+            {
+              "id": "l2-25",
+              "title": "Integrales multiples",
+              "summary": "Fubini, integrales doubles/triples et changements de variables.",
+              "resources": [
+                "Analyse et probabilite L2, chapitre 5",
+                "Analyse et algebre, chapitre 12"
+              ],
+              "hours": 7,
+              "priority": 1,
+              "sequence": 52
+            },
+            {
+              "id": "l2-26",
+              "title": "Integration sur courbes et surfaces",
+              "summary": "Formes differentielles, Stokes, integrales curvilignes et de surface.",
+              "resources": [
+                "Analyse et algebre, chapitre 13"
+              ],
+              "hours": 7,
+              "priority": 2,
+              "sequence": 53
+            }
+          ]
+        },
+        {
+          "title": "Bloc 5 - Equations differentielles",
+          "items": [
+            {
+              "id": "l2-27",
+              "title": "Equations differentielles L2",
+              "summary": "Existence, unicite et etude qualitative.",
+              "resources": [
+                "Analyse 2e annee, chapitre 11",
+                "Analyse et probabilite L2, chapitre 8"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 54
+            },
+            {
+              "id": "l2-28",
+              "title": "Systemes differentiels lineaires",
+              "summary": "Resolution via reduction des endomorphismes.",
+              "resources": [
+                "Algebre et Geometrie 2e annee, chapitre 5"
+              ],
+              "hours": 6,
+              "priority": 2,
+              "sequence": 55
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "l3",
+      "title": "L3 Mathematiques",
+      "phase": "Phase 3 - Licence 3 : specialisation IA",
+      "sourceUrl": "https://app.notion.com/p/2f081175002180d3a653f82a8bfe97b1",
+      "blocks": [
+        {
+          "title": "Analyse L3 - special IA",
+          "items": [
+            {
+              "id": "l3-an-01",
+              "title": "Corps des reels",
+              "summary": "Ordre, borne superieure, intervalles et base reelle necessaire a la topologie.",
+              "resources": [
+                "Topologie generale et espaces normes, chapitre 0",
+                "Tres utile IA theorique"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 56
+            },
+            {
+              "id": "l3-an-02",
+              "title": "Topologie, metrique, compacts et connexes",
+              "summary": "Espaces topologiques, bases, ouverts/fermes, continuite, compacite, suites extraites et connexite.",
+              "resources": [
+                "Topologie generale et espaces normes, chapitres 1 a 4",
+                "Tres utile IA theorique"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 57
+            },
+            {
+              "id": "l3-an-03",
+              "title": "Espaces fonctionnels",
+              "summary": "Stone-Weierstrass, Ascoli et approximation de fonctions continues.",
+              "resources": [
+                "Topologie generale et espaces normes, chapitre 5",
+                "Tres utile IA theorique"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 58
+            },
+            {
+              "id": "l3-an-04",
+              "title": "Espaces normes",
+              "summary": "Espaces vectoriels normes, exemples, applications lineaires continues, parties denses et totales.",
+              "resources": [
+                "Topologie generale et espaces normes, chapitre 6",
+                "Tres utile IA theorique"
+              ],
+              "hours": 9,
+              "priority": 1,
+              "sequence": 59
+            },
+            {
+              "id": "l3-an-05",
+              "title": "Theoremes fondamentaux des espaces normes",
+              "summary": "Banach-Steinhaus, application ouverte, dualite, Hahn-Banach, separation, semi-normes et adjoints.",
+              "resources": [
+                "Topologie generale et espaces normes, chapitre 7",
+                "Tres utile IA theorique"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 60
+            },
+            {
+              "id": "l3-an-06",
+              "title": "Espaces de Hilbert",
+              "summary": "Produits scalaires, projection orthogonale, Riesz-Frechet, bases hilbertiennes, sommes et produit tensoriel.",
+              "resources": [
+                "Topologie generale et espaces normes, chapitre 8",
+                "Noyau dur IA"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 61
+            },
+            {
+              "id": "l3-an-07",
+              "title": "Integrale de Riemann",
+              "summary": "Fonctions reglees et limites de l'integrale de Riemann comme transition vers Lebesgue.",
+              "resources": [
+                "Integration et applications, chapitre 1",
+                "Tres utile IA theorique"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 62
+            },
+            {
+              "id": "l3-an-08",
+              "title": "Tribus et mesures",
+              "summary": "Tribus, sigma-algebres, boreliens, mesurabilite, mesures positives et mesure de Lebesgue.",
+              "resources": [
+                "Integration et applications, chapitre 2",
+                "Tres utile IA theorique"
+              ],
+              "hours": 9,
+              "priority": 1,
+              "sequence": 63
+            },
+            {
+              "id": "l3-an-09",
+              "title": "Construction de l'integrale de Lebesgue",
+              "summary": "Fonctions etagees, fonctions mesurables positives, convergence monotone, Fatou et exemples.",
+              "resources": [
+                "Integration et applications, chapitre 3",
+                "Tres utile IA theorique"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 64
+            },
+            {
+              "id": "l3-an-10",
+              "title": "Convergence dominee et integrales a parametre",
+              "summary": "Presque partout, ensembles negligeables, TCD, continuite et derivabilite sous le signe somme.",
+              "resources": [
+                "Integration et applications, chapitre 4",
+                "Tres utile IA theorique"
+              ],
+              "hours": 9,
+              "priority": 1,
+              "sequence": 65
+            },
+            {
+              "id": "l3-an-11",
+              "title": "Integration sur un espace produit",
+              "summary": "Mesure produit, tribus engendrees, Fubini positif et reel/complexe, applications multiples.",
+              "resources": [
+                "Integration et applications, chapitre 5",
+                "Tres utile IA theorique"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 66
+            },
+            {
+              "id": "l3-an-12",
+              "title": "Espaces Lp",
+              "summary": "Espaces L1 et Lp, completude, Holder, densite des fonctions etagees et continues.",
+              "resources": [
+                "Integration et applications, chapitre 6",
+                "Tres utile IA theorique"
+              ],
+              "hours": 9,
+              "priority": 1,
+              "sequence": 67
+            },
+            {
+              "id": "l3-an-13",
+              "title": "Changement de variable sur un ouvert de Rn",
+              "summary": "Mesure de Lebesgue, invariance, changement de variable general et coordonnees polaires.",
+              "resources": [
+                "Integration et applications, chapitre 7",
+                "Tres utile IA theorique"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 68
+            },
+            {
+              "id": "l3-an-14",
+              "title": "Series de Fourier",
+              "summary": "Series de Fourier dans L1 et L2, cadre hilbertien, orthogonalite et bases orthonormees.",
+              "resources": [
+                "Integration et applications, chapitre 8",
+                "Tres utile IA theorique"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 69
+            },
+            {
+              "id": "l3-an-15",
+              "title": "Analyse fonctionnelle",
+              "summary": "Espaces de fonctions vus comme grands Rn, operateurs lineaires et structure fonctionnelle.",
+              "resources": [
+                "Cours d'analyse fonctionnelle avec 200 exercices corriges, Daniel Li"
+              ],
+              "hours": 10,
+              "priority": 2,
+              "sequence": 70
+            },
+            {
+              "id": "l3-an-16",
+              "title": "Analyse complexe",
+              "summary": "Holomorphie, outils complexes, convolutions, filtres et analyse frequentielle.",
+              "resources": [
+                "Analyse complexe pour la Licence 3, Patrice Tauvel",
+                "El Amrani, Analyse complexe"
+              ],
+              "hours": 9,
+              "priority": 2,
+              "sequence": 71
+            },
+            {
+              "id": "l3-an-17",
+              "title": "Calcul differentiel L3",
+              "summary": "Gradient, Hessienne, conditions d'optimalite et algorithmes vus comme dynamiques continues.",
+              "resources": [
+                "El Amrani, Calcul differentiel"
+              ],
+              "hours": 9,
+              "priority": 1,
+              "sequence": 72
+            },
+            {
+              "id": "l3-an-18",
+              "title": "EDO niveau 0",
+              "summary": "Travail preparatoire sur les equations differentielles ordinaires et partielles.",
+              "resources": [
+                "Equations differentielles ordinaires et partielles"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 73
+            },
+            {
+              "id": "l3-an-19",
+              "title": "Equations differentielles ordinaires",
+              "summary": "EDO, systemes dynamiques et etude qualitative de niveau L3.",
+              "resources": [
+                "Des equations differentielles aux systemes dynamiques I",
+                "Des equations differentielles aux systemes dynamiques II"
+              ],
+              "hours": 10,
+              "priority": 2,
+              "sequence": 74
+            },
+            {
+              "id": "l3-an-20",
+              "title": "Equations aux derivees partielles",
+              "summary": "Bases d'EDP, approximations et liens avec les modeles continus.",
+              "resources": [
+                "Equations aux derivees partielles et leurs approximations"
+              ],
+              "hours": 10,
+              "priority": 2,
+              "sequence": 75
+            }
+          ]
+        },
+        {
+          "title": "Algebre L3 - IA et cryptographie",
+          "items": [
+            {
+              "id": "l3-al-00",
+              "title": "Reduction des endomorphismes",
+              "summary": "Polynome minimal, Jordan, Frobenius, Cayley-Hamilton, Perron-Frobenius.",
+              "resources": [
+                "Algebre lineaire - Reduction des endomorphismes"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 76
+            },
+            {
+              "id": "l3-al-03",
+              "title": "Algebre bilineaire",
+              "summary": "Formes bilineaires, quadratiques, hermitiennes, signature.",
+              "resources": [
+                "Szpirglas, chapitre 3, p.39-102"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 77
+            },
+            {
+              "id": "l3-al-04",
+              "title": "Geometrie affine et convexite",
+              "summary": "Barycentres, hyperplans, convexite, projection, fonctions convexes.",
+              "resources": [
+                "Szpirglas, chapitre 4, p.103-158"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 78
+            },
+            {
+              "id": "l3-al-06",
+              "title": "Theorie des groupes",
+              "summary": "Morphismes, quotients, actions, Burnside, Sylow.",
+              "resources": [
+                "Szpirglas, chapitre 6, p.217-292"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 79
+            },
+            {
+              "id": "l3-al-07",
+              "title": "Groupes et algebre lineaire",
+              "summary": "GLn, SLn, groupes orthogonaux/unitaires, decompositions.",
+              "resources": [
+                "Szpirglas, chapitre 7, p.293-384"
+              ],
+              "hours": 9,
+              "priority": 2,
+              "sequence": 80
+            },
+            {
+              "id": "l3-al-09",
+              "title": "Anneaux",
+              "summary": "Ideaux, quotients, localisation, noetherien, factoriel.",
+              "resources": [
+                "Szpirglas, chapitre 9, p.457-532"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 81
+            },
+            {
+              "id": "l3-al-10",
+              "title": "Polynomes",
+              "summary": "Irreductibilite, polynomes symetriques, resultants, cyclotomiques.",
+              "resources": [
+                "Szpirglas, chapitre 10, p.533-608"
+              ],
+              "hours": 9,
+              "priority": 1,
+              "sequence": 82
+            },
+            {
+              "id": "l3-al-11",
+              "title": "Modules",
+              "summary": "Modules, suites exactes, modules sur anneau principal, invariants.",
+              "resources": [
+                "Szpirglas, chapitre 11, p.609-708"
+              ],
+              "hours": 10,
+              "priority": 2,
+              "sequence": 83
+            },
+            {
+              "id": "l3-al-12",
+              "title": "Corps",
+              "summary": "Extensions, corps de rupture/decomposition, Galois.",
+              "resources": [
+                "Szpirglas, chapitre 12, p.711-758"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 84
+            },
+            {
+              "id": "l3-al-13",
+              "title": "Corps finis",
+              "summary": "Frobenius, F_pn, polynomes irreductibles, Wedderburn.",
+              "resources": [
+                "Szpirglas, chapitre 13, p.759-782"
+              ],
+              "hours": 7,
+              "priority": 1,
+              "sequence": 85
+            }
+          ]
+        },
+        {
+          "title": "Mathematiques appliquees L3",
+          "items": [
+            {
+              "id": "l3-ap-dem-01",
+              "title": "Calculs numeriques approches",
+              "summary": "Erreurs d'arrondi, approximations machine, compensation, pertes de precision, instabilites numeriques et choix d'algorithmes robustes.",
+              "resources": [
+                "Demailly, Analyse numerique et equations differentielles, chapitre I, p.5-20",
+                "Noyau dur IA"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 86
+            },
+            {
+              "id": "l3-ap-dem-02",
+              "title": "Approximation polynomiale",
+              "summary": "Interpolation de Lagrange, convergence, meilleure approximation uniforme, stabilite numerique, polynomes orthogonaux et approximation de fonctions.",
+              "resources": [
+                "Demailly, chapitre II, p.21-60",
+                "Noyau dur IA"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 87
+            },
+            {
+              "id": "l3-ap-dem-03",
+              "title": "Integration numerique",
+              "summary": "Quadratures elementaires et composees, erreur, controle de precision, methodes de Gauss, Euler-Maclaurin, Romberg et extrapolation.",
+              "resources": [
+                "Demailly, chapitre III, p.61-100",
+                "Tres utile IA theorique / modeles continus"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 88
+            },
+            {
+              "id": "l3-ap-dem-04",
+              "title": "Methodes iteratives de resolution",
+              "summary": "Points fixes, equations d'une variable, methodes de Newton, systemes dans R^m et theorem des fonctions implicites.",
+              "resources": [
+                "Demailly, chapitre IV, p.101-134",
+                "Noyau dur IA"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 89
+            },
+            {
+              "id": "l3-ap-dem-05",
+              "title": "Equations differentielles fondamentales",
+              "summary": "Definitions, solutions maximales et globales, existence, unicite de Cauchy-Lipschitz et equations d'ordre superieur.",
+              "resources": [
+                "Demailly, chapitre V, p.135-168",
+                "Tres utile IA theorique / modeles continus"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 90
+            },
+            {
+              "id": "l3-ap-dem-06",
+              "title": "Resolution explicite des EDO",
+              "summary": "Equations du premier ordre, equations non resolues en y', problemes geometriques et equations differentielles du second ordre.",
+              "resources": [
+                "Demailly, chapitre VI, p.169-212",
+                "Tres utile IA theorique / modeles continus"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 91
+            },
+            {
+              "id": "l3-ap-dem-07",
+              "title": "Systemes differentiels lineaires",
+              "summary": "Generalites, systemes a coefficients constants, equations lineaires d'ordre p a coefficients constants et coefficients variables.",
+              "resources": [
+                "Demailly, chapitre VII, p.213-238",
+                "Tres utile IA theorique / modeles continus"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 92
+            },
+            {
+              "id": "l3-ap-dem-08",
+              "title": "Methodes numeriques a un pas",
+              "summary": "Methodes a un pas, consistance, stabilite, convergence, Runge-Kutta et controle du pas pour solveurs d'EDO.",
+              "resources": [
+                "Demailly, chapitre VIII, p.239-272",
+                "Noyau dur IA"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 93
+            },
+            {
+              "id": "l3-ap-dem-09",
+              "title": "Methodes a pas multiples",
+              "summary": "Pas constant, Adams-Bashforth, Adams-Moulton et prediction-correction.",
+              "resources": [
+                "Demailly, chapitre IX, p.273-304",
+                "Tres utile IA theorique / modeles continus"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 94
+            },
+            {
+              "id": "l3-ap-dem-10",
+              "title": "Stabilite et points singuliers",
+              "summary": "Stabilite des solutions, points singuliers d'un champ de vecteurs, trajectoires, comportements asymptotiques et stabilite dynamique.",
+              "resources": [
+                "Demailly, chapitre X, p.305-322",
+                "Tres utile IA theorique / modeles continus"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 95
+            },
+            {
+              "id": "l3-ap-dem-11",
+              "title": "EDO dependant d'un parametre",
+              "summary": "Dependance parametrique des solutions, petites perturbations, sensibilite parametrique et applications aux perturbations.",
+              "resources": [
+                "Demailly, chapitre XI, p.323-342",
+                "Tres utile IA theorique / modeles continus"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 96
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "proba",
+      "title": "Probabilites et Statistiques",
+      "phase": "Phase 4 - Probabilites, statistiques et ML",
+      "sourceUrl": "https://app.notion.com/p/2f081175002180ffa63edbf111bebd68",
+      "blocks": [
+        {
+          "title": "Chapitre 1 - Les fondamentaux (niveau L1)",
+          "items": [
+            {
+              "id": "ps-01",
+              "title": "Statistique descriptive",
+              "summary": "Tableaux, indicateurs, dispersion et representations.",
+              "resources": [
+                "Statistique descriptive, Mementos LMD"
+              ],
+              "hours": 5,
+              "priority": 2,
+              "sequence": 97
+            }
+          ]
+        },
+        {
+          "title": "Chapitre 2 - Probabilites",
+          "items": [
+            {
+              "id": "ps-02",
+              "title": "Probabilites L1",
+              "summary": "Denombrement, probabilites finies, variables et vecteurs aleatoires finis.",
+              "resources": [
+                "Analyse et probabilite L1, chapitres 12 a 15",
+                "Emmanuel Bougnol, playlists denombrement/probabilite/variables aleatoires"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 98
+            },
+            {
+              "id": "ps-03",
+              "title": "Probabilites L2",
+              "summary": "Parcours complet de probabilites de niveau L2.",
+              "resources": [
+                "Introduction aux probabilites, Dalang-Conus, Pfister, tous les chapitres",
+                "Analyse et probabilite L2 en annexe"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 99
+            },
+            {
+              "id": "ps-04",
+              "title": "Probabilites L3",
+              "summary": "Probabilites continues, integration, convergence et variables aleatoires generales.",
+              "resources": [
+                "Garet-Kurtzmann, De l'integration aux probabilites, tous les chapitres"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 100
+            },
+            {
+              "id": "ps-05",
+              "title": "Processus stochastiques",
+              "summary": "Markov discret/continu, renouvellement, martingales, mouvement brownien.",
+              "resources": [
+                "Sabin Lessard, Processus stochastiques, chapitres 1 a 5"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 101
+            }
+          ]
+        },
+        {
+          "title": "Chapitre 3 - Statistique inferentielle (niveau L3)",
+          "items": [
+            {
+              "id": "ps-06",
+              "title": "Statistique inferentielle",
+              "summary": "Estimation, tests, intervalles et modeles statistiques.",
+              "resources": [
+                "Olivier Marchal, Statistiques inferentielles"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 102
+            }
+          ]
+        },
+        {
+          "title": "Chapitre 4 - Analyse des series temporelles (niveau L3)",
+          "items": [
+            {
+              "id": "ps-07",
+              "title": "Series temporelles",
+              "summary": "Modeles temporels, stationnarite, prevision et analyse appliquee.",
+              "resources": [
+                "Bourbonnais et Terraza, Analyse des series temporelles, 3e edition"
+              ],
+              "hours": 10,
+              "priority": 2,
+              "sequence": 103
+            }
+          ]
+        },
+        {
+          "title": "Chapitre 5 - ML, DL, RL et ML Engineering",
+          "items": [
+            {
+              "id": "ps-ai-01",
+              "title": "Cadre general du Machine Learning",
+              "summary": "Evaluation, supervise, regression, regularisation, k-NN, arbres, SVM, reduction de dimension, clustering et premiere intuition des reseaux.",
+              "resources": [
+                "Introduction au machine learning - 3e edition (Chloe-Agathe Azencott)",
+                "Dossier 01_Introduction_theorique_et_algorithmes_classiques"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 104
+            },
+            {
+              "id": "ps-ai-02",
+              "title": "Python Data Science - manipulations",
+              "summary": "Python data, NumPy, pandas, chargement, nettoyage, valeurs manquantes, transformations, jointures, groupby et visualisation.",
+              "resources": [
+                "Analyse_de_donnees_avec_Python_pedagogique.pdf",
+                "Dossier 02_Python_data_et_notebooks",
+                "Livrable : notebook EDA simple"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 105
+            },
+            {
+              "id": "ps-ai-03",
+              "title": "Python Data Science - cours pratique",
+              "summary": "NumPy, pandas, Matplotlib, datasets reels, exercices pratiques, defis et mini-projets.",
+              "resources": [
+                "Udemy - Data Science : Analyse de donnees avec Python",
+                "Livrable : projet du cours nettoye et commente"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 106
+            },
+            {
+              "id": "ps-ai-04",
+              "title": "Pandas avance et visualisation statistique",
+              "summary": "Pandas avance, nettoyage, transformations, fusions, groupby, valeurs manquantes, Seaborn et visualisations statistiques.",
+              "resources": [
+                "Udemy - La Manipulation de donnees avec Python en 2025",
+                "Livrable : EDA complet avec export CSV nettoye"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 107
+            },
+            {
+              "id": "ps-ai-05",
+              "title": "Premiers modeles Scikit-learn",
+              "summary": "KNN, regression lineaire/logistique, k-means, validation croisee, hyperparametres et premiers modeles predictifs.",
+              "resources": [
+                "Udemy - Machine Learning avec Python : La formation complete",
+                "Livrable : mini-projet Scikit-learn avec baseline et analyse d'erreurs"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 108
+            },
+            {
+              "id": "ps-ai-06",
+              "title": "Workflow ML complet avec Geron et Muller",
+              "summary": "Projet ML de bout en bout, classification, entrainement, pipelines, SVM, arbres, ensembles, reduction de dimension, non supervise et donnees textuelles.",
+              "resources": [
+                "Parcours_Data_Science_ML_Geron_Muller.pdf",
+                "Dossier 03_ML_applique_avec_le_PDF_fusionne_Geron_Muller",
+                "Livrable : pipeline Scikit-learn complet"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 109
+            },
+            {
+              "id": "ps-ai-07",
+              "title": "Projet fil rouge Data Science et ML",
+              "summary": "pandas, Matplotlib, Seaborn, Scikit-learn, feature engineering, selection, scaling, modeles supervises/non supervises et projet complet.",
+              "resources": [
+                "Udemy - Data Science et Machine Learning | MasterClass Python",
+                "Livrable : projet ML tabulaire avec rapport court"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 110
+            },
+            {
+              "id": "ps-ai-08",
+              "title": "Statistique appliquee pour diagnostiquer les modeles",
+              "summary": "Regression simple et multiple, diagnostics, variables qualitatives, ANOVA/ANCOVA, selection, ridge, lasso, elastic net, GLM, logistique et Poisson.",
+              "resources": [
+                "Regression avec R - 2e edition",
+                "Dossier 04_Statistique_appliquee_et_regression",
+                "Livrable : probleme de regression refait en Python"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 111
+            },
+            {
+              "id": "ps-ai-09",
+              "title": "Machine Learning probabiliste",
+              "summary": "Regression probabiliste, frequentiste vs bayesien, famille exponentielle, GLM, PAC/VC, clustering, EM/ELBO, graphes, Monte Carlo et variationnel.",
+              "resources": [
+                "ML_intro_francais.pdf",
+                "Dossier 05_ML_probabiliste_et_inference",
+                "Livrable : EM sur modele simple"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 112
+            },
+            {
+              "id": "ps-ai-10",
+              "title": "Optimisation pour ML",
+              "summary": "Convexite, projections, optimalite, GD, SGD, non lisse, regret, online GD, mirror descent, AdaGrad, variance, Nesterov et Frank-Wolfe.",
+              "resources": [
+                "Hazan_Optimization_for_Machine_Learning_FR.pdf",
+                "Dossier 06_Optimisation_pour_ML",
+                "Livrable : comparaison GD, SGD, momentum et Adam"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 113
+            },
+            {
+              "id": "ps-ai-11",
+              "title": "Theorie de l'apprentissage",
+              "summary": "Generalisation, prediction, bornes, noyaux, optimisation, modeles graphiques, PAC, VC/Rademacher, stabilite et regression garantie.",
+              "resources": [
+                "younes-introduction-apprentissage-automatique-fr_avec_signets.pdf",
+                "Fondements de l'apprentissage automatique.pdf",
+                "Apprentissage_machine_with_TOC.pdf",
+                "exercices_machine_learning_fr.pdf",
+                "Dossier 07_Theorie_de_lapprentissage"
+              ],
+              "hours": 14,
+              "priority": 1,
+              "sequence": 114
+            },
+            {
+              "id": "ps-ai-12",
+              "title": "Transition vers Deep Learning",
+              "summary": "PCA, kernel PCA, t-SNE, k-means, regression, SVM/logistique, CNN/RNN/LSTM, autoencodeurs, VAE/GAN, interpretabilite, adversarial et introduction RL.",
+              "resources": [
+                "MLforScience_lectures.fr.pdf",
+                "Dossier 08_Applications_scientifiques_et_transition_vers_DL_RL",
+                "Livrable : mini-projet scientifique avec baseline et reseau simple"
+              ],
+              "hours": 10,
+              "priority": 2,
+              "sequence": 115
+            },
+            {
+              "id": "ps-ai-13",
+              "title": "Entree theorique courte en Deep Learning",
+              "summary": "Perceptron, MLP, activations, pertes, entropie croisee, SGD, CNN, backprop, ResNet, transfert, RNN/GRU/LSTM et NLP.",
+              "resources": [
+                "Introduction-au-Deep-Learning-2021-Fr.pdf",
+                "Notes_de_cours_architectures_reseaux_de_neurones_FR.pdf",
+                "Dossier 09_Entree_en_deep_learning"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 116
+            },
+            {
+              "id": "ps-ai-14",
+              "title": "Deep Learning pratique TensorFlow/Keras",
+              "summary": "TensorFlow 2, Keras, MLP, backprop en framework, activations, loss, optimiseurs, CNN, RNN/LSTM/GRU et projets guides.",
+              "resources": [
+                "Udemy - Deep Learning avec TensorFlow et Keras | MasterClass Python",
+                "Livrable : deux notebooks DL"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 117
+            },
+            {
+              "id": "ps-ai-15",
+              "title": "Vision par ordinateur avec CNN",
+              "summary": "Convolution, pooling, padding, strides, classification d'images, transfer learning, VGG, ResNet et EfficientNet si utilises.",
+              "resources": [
+                "Udemy - Deep Learning: Classification des Images (TensorFlow, Keras)",
+                "Livrable : projet CNN avec transfer learning et ablations"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 118
+            },
+            {
+              "id": "ps-ai-16",
+              "title": "Deep Learning fondamental avec les livres",
+              "summary": "Tenseurs, autograd, pertes, optimisation, regularisation, CNN, espaces latents, autoencodeurs, VAE, MLP, RNN, GAN, diffusion, RL et deploiement.",
+              "resources": [
+                "Mathematiques et architectures de l'apprentissage profond.pdf",
+                "deep_learning_full.pdf",
+                "Deep Learning avec Keras et TensorFlow (avec signets).pdf",
+                "Dossier 10_Deep_learning_fondamental_et_pratique"
+              ],
+              "hours": 14,
+              "priority": 1,
+              "sequence": 119
+            },
+            {
+              "id": "ps-ai-17",
+              "title": "PyTorch pour recherche et engineering",
+              "summary": "Tenseurs, autograd, regression, MLP, CNN, RNN/LSTM, Transformers, ViT, U-Net, transfer learning, segmentation et series temporelles.",
+              "resources": [
+                "YouTube - Apprendre PyTorch pas a pas",
+                "Livrable : reimplementation PyTorch d'un modele Keras"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 120
+            },
+            {
+              "id": "ps-ai-18",
+              "title": "Theorie avancee du Deep Learning",
+              "summary": "ANN, CNN, ResNet, RNN/LSTM, autoencodeurs, attention, GNN, approximation, optimisation, generalisation, PINN/DGM/DKM optionnels, NTK et dynamique d'entrainement.",
+              "resources": [
+                "Theorie mathematique de l'apprentissage profond.pdf",
+                "Deep_Neural_Network.fr.pdf",
+                "Les Principes de la Theorie de l'Apprentissage Profond.pdf",
+                "Dossier 10.5_Theorie_avancee_du_deep_learning"
+              ],
+              "hours": 16,
+              "priority": 2,
+              "sequence": 121
+            },
+            {
+              "id": "ps-ai-19",
+              "title": "Reseaux neuronaux historiques et pont vers RL",
+              "summary": "Hopfield, Boltzmann/RBM, perceptron, MLP, SGD/backprop, CNN/RNN, autoencodeurs, TD learning et Q-learning.",
+              "resources": [
+                "Mehlig_Machine_learning_with_neural_networks_FR.pdf",
+                "Dossier 11_Reseaux_neuronaux_transition_historique_et_pont_vers_RL",
+                "Livrable : note valeur tabulaire vers reseau"
+              ],
+              "hours": 10,
+              "priority": 2,
+              "sequence": 122
+            },
+            {
+              "id": "ps-ai-20",
+              "title": "NLP et Hugging Face pratique",
+              "summary": "Tokenization, Transformers, Datasets, Tokenizers, Accelerate, Hub, fine-tuning et taches NLP classiques.",
+              "resources": [
+                "Cours NLP officiel Hugging Face",
+                "YouTube - Apprendre Hugging Face pas a pas",
+                "Livrable : fine-tuning NLP simple"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 123
+            },
+            {
+              "id": "ps-ai-21",
+              "title": "Transformers et architectures modernes",
+              "summary": "Autodiff, initialisation, CNN, equivariance, groupes, varietes, GNN, Deep Sets, Transformers, self-attention, LLM, RAG, alignement, RLHF, DPO et cours pratique NLP.",
+              "resources": [
+                "Smets_Mathematics_of_Neural_Networks_fr.pdf",
+                "Geometric Deep Learning Grids Groups Graphs Geodesics and Gauges - FR.pdf",
+                "Transformers_The_Definitive_Guide_FR_LaTeX.pdf",
+                "Fondements des grands modeles de langage.pdf",
+                "Udemy - Transformers for NLP",
+                "Dossier 12_Architectures_modernes_avancees"
+              ],
+              "hours": 16,
+              "priority": 1,
+              "sequence": 124
+            },
+            {
+              "id": "ps-ai-22",
+              "title": "Bandits et exploration",
+              "summary": "Bandits stochastiques, exploration uniforme/adaptative, UCB, Thompson sampling, bandits adverses et contextuels.",
+              "resources": [
+                "Introduction aux bandits a plusieurs bras.pdf",
+                "Dossier 13_Bandits_et_exploration",
+                "Livrable : comparer epsilon-greedy, UCB et Thompson sampling"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 125
+            },
+            {
+              "id": "ps-ai-23",
+              "title": "MDP et decision interactive",
+              "summary": "Decision interactive, online learning, poids exponentiels, bandits, MDP episodiques, programmation dynamique, exploration et approximation de fonctions.",
+              "resources": [
+                "Fondements de l'apprentissage par renforcement et de la prise de decision interactive.pdf",
+                "Fondements_apprentissage_renforcement_prise_decision_interactive_FR.pdf en verification",
+                "Dossier 14_Decision_interactive_et_MDP"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 126
+            },
+            {
+              "id": "ps-ai-24",
+              "title": "Apprentissage par renforcement avec Python",
+              "summary": "Premiers agents RL, etats, actions, recompenses, exploration/exploitation, methodes tabulaires, environnements, stabilisation et courbes de retour.",
+              "resources": [
+                "Udemy - Initiation a l'apprentissage par renforcement avec Python",
+                "Udemy - Apprentissage par renforcement avec Python - Partie 2",
+                "Livrable : projet RL comparant au moins deux methodes"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 127
+            },
+            {
+              "id": "ps-ai-25",
+              "title": "Reinforcement Learning general",
+              "summary": "MDP/POMDP, value iteration, policy iteration, Monte Carlo, TD, SARSA, Q-learning, DQN, policy gradients, actor-critic, PPO/TRPO.",
+              "resources": [
+                "Reinforcement Learning - Vue d'ensemble FR.pdf",
+                "Dossier 15_Reinforcement_learning_general",
+                "Livrable : Q-learning et SARSA tabulaires"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 128
+            },
+            {
+              "id": "ps-ai-26",
+              "title": "Deep Reinforcement Learning",
+              "summary": "DQN, replay buffer, target network, policy gradients, actor-critic, PPO/TRPO, model-based RL, MCTS, offline RL, Gymnasium, seeds, logs et ablations.",
+              "resources": [
+                "Reinforcement Learning - Vue d'ensemble FR.pdf",
+                "Plaat_Deep_Reinforcement_Learning_FR.pdf",
+                "Deep Learning avec Keras et TensorFlow (chapitre RL)",
+                "Dossier 16_Deep_reinforcement_learning"
+              ],
+              "hours": 16,
+              "priority": 1,
+              "sequence": 129
+            },
+            {
+              "id": "ps-ai-27",
+              "title": "RLHF, preferences et alignement",
+              "summary": "Alignement, RLHF, DPO, donnees de preference, reward models, LLM-as-a-judge, PPO, RLOO, GRPO/GSPO, rejection sampling, KL et evaluation.",
+              "resources": [
+                "Fondements des grands modeles de langage.pdf",
+                "Apprentissage par renforcement a partir du feedback humain 2.pdf",
+                "Dossier 17_RLHF_preferences_et_alignement"
+              ],
+              "hours": 12,
+              "priority": 2,
+              "sequence": 130
+            },
+            {
+              "id": "ps-ai-28",
+              "title": "AI Engineering et capstone",
+              "summary": "Evaluation de systemes IA, donnees, orchestration, cout, monitoring, robustesse, deploiement, FastAPI, Docker, tests, logs et capstone final.",
+              "resources": [
+                "AI_Engineering_FR.pdf",
+                "Dossier 18_AI_engineering_et_capstone",
+                "Livrable : capstone avec baseline, metriques, protocole, seeds, rapport et API servable"
+              ],
+              "hours": 16,
+              "priority": 1,
+              "sequence": 131
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "info",
+      "title": "Informatique",
+      "phase": "Domaine 3 - Informatique",
+      "sourceUrl": "https://app.notion.com/p/2ec8117500218030b709fa683fdd72ac",
+      "blocks": [
+        {
+          "title": "Chapitre 1 - Informatique lycee",
+          "items": [
+            {
+              "id": "info-01",
+              "title": "NSI Premiere",
+              "summary": "Algorithmique, variables, conditions, boucles et fonctions.",
+              "resources": [
+                "Notes algorithmiques des cours vidéo de Grafikart",
+                "NSI Premiere - chapitres 1 a 5",
+                "Exercices du chapitre 1 a 5"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 132
+            },
+            {
+              "id": "info-03",
+              "title": "NSI Terminale",
+              "summary": "Approfondissement des structures de donnees, graphes et programmation.",
+              "resources": [
+                "Programme NSI Terminale"
+              ],
+              "hours": 10,
+              "priority": 2,
+              "sequence": 133
+            }
+          ]
+        },
+        {
+          "title": "Chapitre 2 - Les bases de Python",
+          "items": [
+            {
+              "id": "info-04",
+              "title": "IDE et environnement",
+              "summary": "Prise en main de Visual Studio Code et organisation du travail Python.",
+              "resources": [
+                "Playlist Visual Studio Code",
+                "https://www.youtube.com/playlist?list=PLrSOXFDHBtfFzgjFG8ac8LEHKPbE8loan"
+              ],
+              "hours": 4,
+              "priority": 2,
+              "sequence": 134
+            },
+            {
+              "id": "info-05",
+              "title": "Introduction a Python",
+              "summary": "Syntaxe, types, fonctions, modules et premiers scripts.",
+              "resources": [
+                "Python cours vidéo",
+                "https://www.youtube.com/playlist?list=PLrSOXFDHBtfHg8fWBd7sKPxEmahwyVBkC",
+                "Cours Udemy Python"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 135
+            },
+            {
+              "id": "info-06",
+              "title": "Python pour les maths",
+              "summary": "Utiliser Python pour calculer, representer et explorer des objets mathematiques.",
+              "resources": [
+                "Programmation_Python_Mathematiques_TOC"
+              ],
+              "hours": 8,
+              "priority": 1,
+              "sequence": 136
+            },
+            {
+              "id": "info-07",
+              "title": "Methodes numeriques avec Python",
+              "summary": "Implementer des methodes numeriques et du calcul scientifique simple.",
+              "resources": [
+                "Methodes numeriques avec Python"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 137
+            }
+          ]
+        },
+        {
+          "title": "Chapitre 3 - Informatique sup",
+          "items": [
+            {
+              "id": "info-08",
+              "title": "Architecture des machines",
+              "summary": "Architecture machine, memoire, processeur et representation.",
+              "resources": [
+                "Architecture des machines et des systemes informatiques",
+                "https://www.youtube.com/playlist?list=PLrSOXFDHBtfFrlG51dj8p_zCV994yWahY"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 138
+            },
+            {
+              "id": "info-15",
+              "title": "Langage C - memoire et programmation bas niveau",
+              "summary": "Compilation, types, fonctions, tableaux, chaines, pointeurs, structures, fichiers, allocation dynamique et preprocesseur.",
+              "resources": [
+                "Programmer en langage C - Cours et exercices corriges, Claude Delannoy, 5e edition",
+                "Le langage C - Apprendre a programmer, Jean-Michel Lery",
+                "https://www.youtube.com/playlist?list=PLrSOXFDHBtfHHRAZc013y4xNA6Y4B1CWP",
+                "Exercices en langage C - Claude Delannoy"
+              ],
+              "hours": 14,
+              "priority": 1,
+              "sequence": 139
+            },
+            {
+              "id": "info-09",
+              "title": "Introduction a l'assembleur",
+              "summary": "Premiers modeles d'execution bas niveau et logique assembleur.",
+              "resources": [
+                "Programmation Assembleur x86, 32 et 64 bits sous Linux Ubuntu",
+                "https://www.youtube.com/playlist?list=PLrSOXFDHBtfEs7PCC6r44iXiX5gMlbjcR"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 140
+            },
+            {
+              "id": "info-10",
+              "title": "Informatique MPSI",
+              "summary": "Algorithmique et programmation de niveau superieur.",
+              "resources": [
+                "Programme informatique MPSI"
+              ],
+              "hours": 10,
+              "priority": 2,
+              "sequence": 141
+            },
+            {
+              "id": "info-11",
+              "title": "Programmation efficace",
+              "summary": "Complexite, structures de donnees et choix d'implementation.",
+              "resources": [
+                "Programmation efficace"
+              ],
+              "hours": 10,
+              "priority": 1,
+              "sequence": 142
+            }
+          ]
+        },
+        {
+          "title": "Chapitre 4 - Algorithmique ++",
+          "items": [
+            {
+              "id": "info-12",
+              "title": "Algorithmique avancee",
+              "summary": "Renforcer les algorithmes classiques et les raisonnements de complexite.",
+              "resources": [
+                "Algorithmique - cours avec 957 exercices et 158 problemes"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 143
+            }
+          ]
+        },
+        {
+          "title": "Chapitre 5 - HTML/CSS",
+          "items": [
+            {
+              "id": "info-13",
+              "title": "HTML et CSS",
+              "summary": "Bases de l'integration web et interfaces simples.",
+              "resources": [
+                "HTML5 et CSS3 : maitrisez les standards des applications Web",
+                "HTML5 et CSS3 - Cours et exercices corriges",
+                "Premiers pas en CSS3 et HTML5",
+                "https://www.udemy.com/course/html5-et-css3-la-formation-ultime/"
+              ],
+              "hours": 8,
+              "priority": 2,
+              "sequence": 144
+            }
+          ]
+        },
+        {
+          "title": "Chapitre 6 - Projet Backend",
+          "items": [
+            {
+              "id": "info-14",
+              "title": "Projet backend",
+              "summary": "Construire un projet backend organise et maintenable.",
+              "resources": [
+                "Projet Ingenieur Backend",
+                "https://app.notion.com/p/30081175002180209e39dfaf4915e58f"
+              ],
+              "hours": 12,
+              "priority": 1,
+              "sequence": 145
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "STUDY_DOMAINS": [
+    {
+      "id": "maths",
+      "title": "Maths Sup",
+      "shortTitle": "Maths",
+      "accent": "maths",
+      "programIds": [
+        "l1",
+        "l2",
+        "l3"
+      ],
+      "rule": "Avancer dans l'ordre L1, puis L2, puis L3."
+    },
+    {
+      "id": "proba",
+      "title": "Proba",
+      "shortTitle": "Proba",
+      "accent": "proba",
+      "programIds": [
+        "proba"
+      ],
+      "rule": "Suivre le programme probabilites/statistiques dans l'ordre."
+    },
+    {
+      "id": "info",
+      "title": "Informatique",
+      "shortTitle": "Info",
+      "accent": "info",
+      "programIds": [
+        "info"
+      ],
+      "rule": "Suivre le programme informatique dans l'ordre."
+    }
+  ],
+  "WEEK_TEMPLATES": {
+    "A": {
+      "label": "Semaine A",
+      "summary": "Maths Sup x2, Proba x2, Info x1",
+      "days": [
+        {
+          "id": "mon",
+          "label": "Lun",
+          "longLabel": "Lundi",
+          "domainId": "maths"
+        },
+        {
+          "id": "tue",
+          "label": "Mar",
+          "longLabel": "Mardi",
+          "domainId": "maths"
+        },
+        {
+          "id": "wed",
+          "label": "Mer",
+          "longLabel": "Mercredi",
+          "domainId": "proba"
+        },
+        {
+          "id": "thu",
+          "label": "Jeu",
+          "longLabel": "Jeudi",
+          "domainId": "proba"
+        },
+        {
+          "id": "fri",
+          "label": "Ven",
+          "longLabel": "Vendredi",
+          "domainId": "info"
+        }
+      ]
+    },
+    "B": {
+      "label": "Semaine B",
+      "summary": "Maths Sup x2, Info x2, Proba x1",
+      "days": [
+        {
+          "id": "mon",
+          "label": "Lun",
+          "longLabel": "Lundi",
+          "domainId": "maths"
+        },
+        {
+          "id": "tue",
+          "label": "Mar",
+          "longLabel": "Mardi",
+          "domainId": "maths"
+        },
+        {
+          "id": "wed",
+          "label": "Mer",
+          "longLabel": "Mercredi",
+          "domainId": "info"
+        },
+        {
+          "id": "thu",
+          "label": "Jeu",
+          "longLabel": "Jeudi",
+          "domainId": "info"
+        },
+        {
+          "id": "fri",
+          "label": "Ven",
+          "longLabel": "Vendredi",
+          "domainId": "proba"
+        }
+      ]
+    }
+  },
+  "SESSION_SLOTS": [
+    {
+      "id": "morning",
+      "label": "Matin",
+      "start": "09:00",
+      "end": "12:30"
+    },
+    {
+      "id": "afternoon",
+      "label": "Apres-midi",
+      "start": "13:30",
+      "end": "18:00"
+    }
+  ]
+}
