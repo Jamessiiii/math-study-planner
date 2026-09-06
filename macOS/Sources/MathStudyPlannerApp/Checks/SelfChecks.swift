@@ -40,8 +40,8 @@ enum SelfChecks {
         let catalog = ProgrammeCatalogLoader.load()
         let catalogCountsMatch = catalog?.programmes.count == 5
             && catalog?.programmes.flatMap(\.blocks).count == 25
-            && catalog?.chapters.count == 145
-        let catalogIDsAreUnique = catalog.map { Set($0.chapters.map(\.id)).count == 145 } ?? false
+            && catalog?.chapters.count == 139
+        let catalogIDsAreUnique = catalog.map { Set($0.chapters.map(\.id)).count == 139 } ?? false
         let catalogueMatchesNotion = catalog.map { catalogue in
             let programmes = Dictionary(uniqueKeysWithValues: catalogue.programmes.map { ($0.id, $0) })
             return programmes["l1"]?.blocks.count == 6
@@ -49,8 +49,15 @@ enum SelfChecks {
                 && programmes["l2"]?.blocks.count == 5
                 && programmes["l2"]?.blocks.last?.items.map(\.id) == ["l2-27", "l2-28"]
                 && programmes["proba"]?.blocks.count == 5
+                && programmes["proba"]?.title == "Programme Probabilité-Statistique"
                 && programmes["proba"]?.blocks[1].items.first(where: { $0.id == "ps-03" })?.resources.first?.contains("Dalang-Conus") == true
-                && programmes["proba"]?.blocks.last?.items.count == 28
+                && programmes["proba"]?.blocks.last?.title == "Chapitre 5 - Programme IA"
+                && programmes["proba"]?.blocks.last?.items.count == 22
+                && programmes["proba"]?.blocks.last?.items.map(\.id) == [
+                    "ps-ai-01", "ps-ai-02", "ps-ai-03", "ps-ai-04", "ps-ai-05", "ps-ai-06", "ps-ai-07", "ps-ai-08",
+                    "ps-ai-10", "ps-ai-11", "ps-ai-13", "ps-ai-15", "ps-ai-16", "ps-ai-17", "ps-ai-18", "ps-ai-20",
+                    "ps-ai-21", "ps-ai-24", "ps-ai-22", "ps-ai-26", "ps-ai-27", "ps-ai-28"
+                ]
                 && programmes["info"]?.blocks.count == 6
                 && programmes["info"]?.blocks[2].items.map(\.id) == ["info-08", "info-15", "info-09", "info-10", "info-11"]
                 && programmes["info"]?.blocks.last?.items.map(\.id) == ["info-14"]
@@ -74,7 +81,7 @@ enum SelfChecks {
             ("semaine suivante = semaine B", nextWeekIsB),
             ("20 et 22 juillet 2026 = semaine B en Guadeloupe", july22IsB),
             ("répartition de la semaine A", assignmentsMatch),
-            ("catalogue 5 programmes / 25 blocs / 145 chapitres", catalogCountsMatch),
+            ("catalogue 5 programmes / 25 blocs / 139 chapitres", catalogCountsMatch),
             ("identifiants de chapitre uniques", catalogIDsAreUnique),
             ("structure et sources Notion à jour", catalogueMatchesNotion),
             ("programmations A/B complètes", plansAreComplete),
@@ -219,7 +226,7 @@ enum SelfChecks {
             }
             let secondStore = AppStore(fileURL: validURL)
             let migratedChapter = secondStore.chapters.first(where: { $0.id == "l1-24" })
-            results.roundTrip = secondStore.chapters.count == 145
+            results.roundTrip = secondStore.chapters.count == 139
                 && secondStore.sessions.count == 11
                 && secondStore.sessions.allSatisfy(\.isGeneratedFromWeekPlan)
                 && migratedChapter?.status == .done
@@ -232,7 +239,7 @@ enum SelfChecks {
             let recoveredStore = AppStore(fileURL: corruptURL)
             var directoryEntries = try FileManager.default.contentsOfDirectory(atPath: directory.path)
             results.quarantine = recoveredStore.persistenceError != nil
-                && recoveredStore.chapters.count == 145
+                && recoveredStore.chapters.count == 139
                 && directoryEntries.contains(where: { $0.hasPrefix("corrupt.corrupt-") })
 
             let duplicateURL = directory.appendingPathComponent("duplicate.json")
@@ -247,7 +254,7 @@ enum SelfChecks {
             let duplicateStore = AppStore(fileURL: duplicateURL)
             directoryEntries = try FileManager.default.contentsOfDirectory(atPath: directory.path)
             results.duplicateIDs = duplicateStore.persistenceError != nil
-                && duplicateStore.chapters.count == 145
+                && duplicateStore.chapters.count == 139
                 && directoryEntries.contains(where: { $0.hasPrefix("duplicate.corrupt-") })
 
             let failingStore = AppStore(fileURL: URL(fileURLWithPath: "/dev/null/planner.json"))
